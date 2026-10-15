@@ -7,7 +7,7 @@ import { defaultFilters, type FilterState } from "@/components/shop/ProductFilte
 import { DesktopFilterButton } from "@/components/shop/DesktopFilterBar";
 import { ProductCard } from "@/components/shop/ProductCard";
 import Pagination from "@/components/shop/Pagination";
-import wordmarkBlack from "@/assets/ASL_wordmark_black.png.asset.json";
+import wordmarkBlack from "@/assets/ASL_wordmark_black.png";
 
 const PER_PAGE = 12;
 import { sortOptions } from "@/lib/shop-data";
@@ -48,7 +48,7 @@ export function DesktopBestSellers() {
 
         <motion.div initial="hidden" animate="visible" variants={fadeInUp} className="flex items-end justify-between mb-4">
           <div>
-            <img src={wordmarkBlack.url} alt="ASL ORIGINALS" className="h-[22px] w-auto object-contain mb-2" />
+            <img src={wordmarkBlack} alt="ASL ORIGINALS" className="h-[22px] w-auto object-contain mb-2" />
             <p className="text-[13px] text-muted-foreground mt-1">Our most loved pieces. Handpicked by you.</p>
           </div>
           <div className="flex items-center gap-2">

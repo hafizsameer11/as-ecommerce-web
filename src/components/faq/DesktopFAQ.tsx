@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import wordmarkWhite from "@/assets/ASL_wordmark_white.png.asset.json";
+import wordmarkWhite from "@/assets/ASL_wordmark_white.png";
 import { goToLabel } from "@/lib/nav-resolve";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "@tanstack/react-router";
@@ -45,7 +45,7 @@ export function DesktopFAQ() {
       <header className="bg-ink text-white sticky top-0 z-30">
         <div className="mx-auto max-w-[1600px] flex items-center justify-between px-6 py-4 gap-6">
           <Link to="/" className="shrink-0">
-            <img src={wordmarkWhite.url} alt="ASL ORIGINALS" className="h-[16px] w-auto object-contain" />
+            <img src={wordmarkWhite} alt="ASL ORIGINALS" className="h-[16px] w-auto object-contain" />
             <div className="text-[9px] tracking-[0.3em] text-white/60 mt-1">FASHION CONCIERGE</div>
           </Link>
           <nav className="flex items-center gap-9">

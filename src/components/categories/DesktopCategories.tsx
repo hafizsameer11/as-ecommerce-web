@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import wordmarkBlack from "@/assets/ASL_wordmark_black.png.asset.json";
+import wordmarkBlack from "@/assets/ASL_wordmark_black.png";
 import { goToLabel } from "@/lib/nav-resolve";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
@@ -74,7 +74,7 @@ export function DesktopCategories() {
       <header className="bg-background border-b border-border sticky top-0 z-30">
         <div className="mx-auto max-w-[1600px] flex items-center justify-between px-6 py-4 gap-6">
           <Link to="/" className="shrink-0">
-            <img src={wordmarkBlack.url} alt="ASL ORIGINALS" className="h-[16px] w-auto object-contain" />
+            <img src={wordmarkBlack} alt="ASL ORIGINALS" className="h-[16px] w-auto object-contain" />
             <div className="text-[9px] tracking-[0.3em] text-muted-foreground mt-1">FASHION CONCIERGE</div>
           </Link>
           <nav className="flex items-center gap-9">

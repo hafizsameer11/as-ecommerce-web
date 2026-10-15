@@ -1,14 +1,14 @@
 import { motion } from "framer-motion";
 import { ShoppingBag } from "lucide-react";
 import { buttonTap } from "@/lib/motion";
-import salesHeroAsset from "@/assets/sales-hero.png.asset.json";
+import salesHeroAsset from "@/assets/sales-hero.png";
 
 export function SalesHero({ compact = false }: { compact?: boolean }) {
   return (
     <div className={`relative w-full rounded-xl overflow-hidden ${compact ? "h-[170px]" : "h-[260px]"}`}>
       {/* Background image with dark blended backdrop */}
       <img
-        src={salesHeroAsset.url}
+        src={salesHeroAsset}
         alt="Sales hero"
         width={1600}
         height={512}

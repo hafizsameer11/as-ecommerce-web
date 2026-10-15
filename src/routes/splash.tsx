@@ -3,8 +3,8 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import { useAuth } from "@/lib/auth-store";
 import { useIsDesktop } from "@/hooks/use-breakpoint";
-import emblem from "@/assets/ASL_emblem_orange_stroke.png.asset.json";
-import wordmark from "@/assets/ASL_wordmark_white.png.asset.json";
+import emblem from "@/assets/ASL_emblem_orange_stroke.png";
+import wordmark from "@/assets/ASL_wordmark_white.png";
 
 export const Route = createFileRoute("/splash")({
   head: () => ({
@@ -50,7 +50,7 @@ function SplashPage() {
         transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
       >
         <motion.img
-          src={emblem.url}
+          src={emblem}
           alt=""
           initial={{ opacity: 0, scale: 0.92 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -59,7 +59,7 @@ function SplashPage() {
         />
 
         <motion.img
-          src={wordmark.url}
+          src={wordmark}
           alt="ASL ORIGINALS"
           initial={{ opacity: 0, y: 4 }}
           animate={{ opacity: 1, y: 0 }}

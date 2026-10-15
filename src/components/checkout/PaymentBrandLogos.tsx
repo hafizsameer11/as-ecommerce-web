@@ -1,12 +1,12 @@
 import { Landmark } from "lucide-react";
-import visaAsset from "@/assets/visa.png.asset.json";
-import mastercardAsset from "@/assets/mastercard.png.asset.json";
-import verveAsset from "@/assets/verve.png.asset.json";
+import visaAsset from "@/assets/visa.png";
+import mastercardAsset from "@/assets/mastercard.png";
+import verveAsset from "@/assets/verve.png";
 
 export const paymentBrands = [
-  { name: "Visa", src: visaAsset.url },
-  { name: "Mastercard", src: mastercardAsset.url },
-  { name: "Verve", src: verveAsset.url },
+  { name: "Visa", src: visaAsset },
+  { name: "Mastercard", src: mastercardAsset },
+  { name: "Verve", src: verveAsset },
 ];
 
 export function PaymentBrandLogos({ className = "" }: { className?: string }) {

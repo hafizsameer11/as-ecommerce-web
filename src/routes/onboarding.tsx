@@ -5,7 +5,7 @@ import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth-store";
 import slide1 from "@/assets/onboard-1.jpg";
-import wordmarkWhite from "@/assets/ASL_wordmark_white.png.asset.json";
+import wordmarkWhite from "@/assets/ASL_wordmark_white.png";
 import slide2 from "@/assets/onboard-2.jpg";
 import slide3 from "@/assets/onboard-3.jpg";
 import slide4 from "@/assets/onboard-4.jpg";
@@ -117,7 +117,7 @@ function OnboardingPage() {
         {/* Header on top of image */}
         <header className="absolute inset-x-0 top-0 z-10 flex items-start justify-between px-6 pt-6">
           <div className="flex flex-col">
-            <img src={wordmarkWhite.url} alt="ASL ORIGINALS" className="h-[17px] w-auto object-contain" />
+            <img src={wordmarkWhite} alt="ASL ORIGINALS" className="h-[17px] w-auto object-contain" />
           </div>
           <button
             onClick={done}

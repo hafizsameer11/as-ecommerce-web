@@ -19,9 +19,9 @@ import { useWishlistCount } from "@/lib/wishlist";
 import { useAccountDisplayName, useAuth } from "@/lib/auth-store";
 import { useClubRewards } from "@/components/account/rewardsData";
 import { subCategories } from "@/lib/shop-data";
-import wordmarkBlack from "@/assets/ASL_wordmark_black.png.asset.json";
-import wordmarkWhite from "@/assets/ASL_wordmark_white.png.asset.json";
-import emblemWhite from "@/assets/ASL_emblem_white_transparent.png.asset.json";
+import wordmarkBlack from "@/assets/ASL_wordmark_black.png";
+import wordmarkWhite from "@/assets/ASL_wordmark_white.png";
+import emblemWhite from "@/assets/ASL_emblem_white_transparent.png";
 import { StorefrontAnnouncementBar } from "@/components/shell/StorefrontAnnouncementBar";
 
 
@@ -177,7 +177,7 @@ export function MobileShell({
               </motion.button>
             )}
             <div className="flex justify-center">
-              <img src={wordmarkBlack.url} alt="ASL ORIGINALS" className="h-[14px] w-auto object-contain" />
+              <img src={wordmarkBlack} alt="ASL ORIGINALS" className="h-[14px] w-auto object-contain" />
             </div>
             <div className="flex items-center gap-4 text-foreground">
               {!isSearchPage && (
@@ -209,7 +209,7 @@ export function MobileShell({
               <ArrowLeft className="h-6 w-6" strokeWidth={1.75} />
             </motion.button>
             <div className="flex justify-center">
-              <img src={wordmarkBlack.url} alt="ASL ORIGINALS" className="h-[14px] w-auto object-contain" />
+              <img src={wordmarkBlack} alt="ASL ORIGINALS" className="h-[14px] w-auto object-contain" />
             </div>
             <div className="flex items-center gap-4 text-foreground">
               {showSearchInHeader && !isSearchPage && (
@@ -234,7 +234,7 @@ export function MobileShell({
               <Menu className="h-6 w-6" strokeWidth={1.75} />
             </motion.button>
             <div className="flex justify-center">
-              <img src={wordmarkBlack.url} alt="ASL ORIGINALS" className="h-[14px] w-auto object-contain" />
+              <img src={wordmarkBlack} alt="ASL ORIGINALS" className="h-[14px] w-auto object-contain" />
             </div>
             <div className="flex items-center justify-end gap-4 text-foreground">
               <motion.button whileTap="tap" variants={buttonTap} onClick={() => toast("No new notifications")} aria-label="Notifications" className="relative">
@@ -280,7 +280,7 @@ export function MobileShell({
               </motion.button>
             )}
             <div className="flex justify-center">
-              <img src={wordmarkWhite.url} alt="ASL ORIGINALS" className="h-[14px] w-auto object-contain" />
+              <img src={wordmarkWhite} alt="ASL ORIGINALS" className="h-[14px] w-auto object-contain" />
             </div>
             <div className="flex items-center gap-3 text-paper">
               <motion.button
@@ -481,14 +481,14 @@ export function MobileShell({
                 <div className="flex min-w-0 items-center gap-2" aria-label="ASL ORIGINALS">
                   <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full border-[0.5px] border-paper/50 bg-ink">
                     <img
-                      src={emblemWhite.url}
+                      src={emblemWhite}
                       alt=""
                       aria-hidden="true"
                       className="h-full w-full object-contain"
                     />
                   </div>
                   <img
-                    src={wordmarkWhite.url}
+                    src={wordmarkWhite}
                     alt="ASL ORIGINALS"
                     className="h-[15px] w-auto max-w-[155px] object-contain object-left"
                   />

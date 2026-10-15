@@ -8,7 +8,7 @@ import { useIsDesktop } from "@/hooks/use-breakpoint";
 import { DesktopShell } from "@/components/shell/DesktopShell";
 import { naira } from "@/components/checkout/checkoutData";
 import { useOrderById, useOrders } from "@/lib/orders-store";
-import wordmarkBlack from "@/assets/ASL_wordmark_black.png.asset.json";
+import wordmarkBlack from "@/assets/ASL_wordmark_black.png";
 
 const searchSchema = z.object({
   id: fallback(z.string(), "").default(""),
@@ -243,7 +243,7 @@ function ConfirmationPage() {
             <ArrowLeft className="h-6 w-6" strokeWidth={1.75} />
           </button>
           <div className="flex justify-center">
-            <img src={wordmarkBlack.url} alt="ASL ORIGINALS" className="h-[15px] w-auto object-contain" />
+            <img src={wordmarkBlack} alt="ASL ORIGINALS" className="h-[15px] w-auto object-contain" />
           </div>
           <button onClick={() => navigate({ to: "/cart" })} aria-label="Cart" className="relative">
             <ShoppingBag className="h-[22px] w-[22px]" strokeWidth={1.75} />

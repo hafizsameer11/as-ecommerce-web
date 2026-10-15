@@ -10,7 +10,7 @@ import { useWishlistCount } from "@/lib/wishlist";
 import { useAuth } from "@/lib/auth-store";
 import { subCategories } from "@/lib/shop-data";
 import { PaymentBrandLogos } from "@/components/checkout/PaymentBrandLogos";
-import wordmarkWhite from "@/assets/ASL_wordmark_white.png.asset.json";
+import wordmarkWhite from "@/assets/ASL_wordmark_white.png";
 import heroModels from "@/assets/hero-models.jpg";
 import heroSneakers from "@/assets/hero-sneakers.jpg";
 import { StorefrontAnnouncementBar } from "@/components/shell/StorefrontAnnouncementBar";
@@ -92,7 +92,7 @@ export function DesktopShell({
             </motion.button>
             <motion.div whileHover={{ scale: 1.02 }} whileTap="tap" variants={buttonTap}>
               <Link to="/" className="shrink-0 inline-block">
-                <img src={wordmarkWhite.url} alt="ASL ORIGINALS" className="h-[19px] w-auto object-contain" />
+                <img src={wordmarkWhite} alt="ASL ORIGINALS" className="h-[19px] w-auto object-contain" />
               </Link>
             </motion.div>
           </div>
@@ -493,7 +493,7 @@ export function DesktopShell({
             <div className="md:col-span-4">
               <div className="mb-8">
                 <img
-                  src={wordmarkWhite.url}
+                  src={wordmarkWhite}
                   alt="ASL ORIGINALS"
                   className="mb-4 h-[18px] w-auto max-w-[210px] object-contain"
                 />
