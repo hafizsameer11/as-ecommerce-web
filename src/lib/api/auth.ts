@@ -1,4 +1,4 @@
-import { apiRequest } from "./client";
+import { apiRequest, saveTokens } from "./client";
 
 export type CustomerPreferences = {
   language?: string;
@@ -47,18 +47,35 @@ export type ApiSession = {
   createdAt: string;
 };
 
-export const storeAuthApi = {
-  login: (email: string, password: string) =>
-    apiRequest<AuthSessionResponse>("/store/auth/login", { method: "POST", body: { email, password } }),
+function persistSessionTokens(res: AuthSessionResponse | { accessToken: string; refreshToken: string }) {
+  if (res.accessToken && res.refreshToken) {
+    saveTokens({ accessToken: res.accessToken, refreshToken: res.refreshToken });
+  }
+}
 
-  login2fa: (challenge: string, code: string) =>
-    apiRequest<AuthSessionResponse>("/store/auth/login/2fa", {
+export const storeAuthApi = {
+  login: async (email: string, password: string) => {
+    const res = await apiRequest<AuthSessionResponse>("/store/auth/login", {
+      method: "POST",
+      body: { email, password },
+      skipAuth: true,
+    });
+    if (!res.twoFactorRequired) persistSessionTokens(res);
+    return res;
+  },
+
+  login2fa: async (challenge: string, code: string) => {
+    const res = await apiRequest<AuthSessionResponse>("/store/auth/login/2fa", {
       method: "POST",
       body: { challenge, code },
-    }),
+      skipAuth: true,
+    });
+    persistSessionTokens(res);
+    return res;
+  },
 
-  register: (data: { name: string; email: string; phone?: string; password: string }) =>
-    apiRequest<AuthSessionResponse>("/store/auth/register", {
+  register: async (data: { name: string; email: string; phone?: string; password: string }) => {
+    const res = await apiRequest<AuthSessionResponse>("/store/auth/register", {
       method: "POST",
       body: {
         name: data.name,
@@ -66,15 +83,29 @@ export const storeAuthApi = {
         phone: data.phone || undefined,
         password: data.password,
       },
-    }),
+      skipAuth: true,
+    });
+    persistSessionTokens(res);
+    return res;
+  },
 
-  logout: () => apiRequest<{ signedOut: boolean }>("/store/auth/logout", { method: "POST" }),
+  logout: async () => {
+    try {
+      return await apiRequest<{ signedOut: boolean }>("/store/auth/logout", { method: "POST" });
+    } finally {
+      saveTokens(null);
+    }
+  },
 
-  refresh: () =>
-    apiRequest<{ accessToken: string; refreshToken: string }>("/store/auth/refresh", {
+  refresh: async () => {
+    const res = await apiRequest<{ accessToken: string; refreshToken: string }>("/store/auth/refresh", {
       method: "POST",
       body: {},
-    }),
+      skipAuth: true,
+    });
+    persistSessionTokens(res);
+    return res;
+  },
 
   forgotPassword: (email: string) =>
     apiRequest<{ sent: boolean }>("/store/auth/password/forgot", { method: "POST", body: { email } }),

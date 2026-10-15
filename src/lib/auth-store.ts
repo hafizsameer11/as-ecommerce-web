@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { ApiError } from "@/lib/api/client";
+import { ApiError, loadTokens, saveTokens } from "@/lib/api/client";
 import { storeAuthApi, type CustomerDto } from "@/lib/api/auth";
 
 export type AuthMode = "signin" | "signup" | "forgot" | "otp";
@@ -155,7 +155,7 @@ export const useAuth = create<AuthState>()(
         try {
           await storeAuthApi.logout();
         } catch {
-          /* still clear local session */
+          saveTokens(null);
         }
         await clearUserPersistedStores();
         set({ user: null, isLoggedIn: false, twoFactorChallenge: null });
@@ -170,9 +170,16 @@ export const useAuth = create<AuthState>()(
       setLoginMode: (mode) => set({ loginMode: mode }),
       bootstrap: async () => {
         try {
+          const tokens = loadTokens();
+          if (!tokens?.accessToken && !tokens?.refreshToken) {
+            set({ user: null, isLoggedIn: false, hydrated: true, twoFactorChallenge: null });
+            void import("@/lib/cart-store").then(({ useCart }) => useCart.getState().refresh());
+            return;
+          }
           const me = await storeAuthApi.me();
           applySession(set, get, me);
         } catch {
+          saveTokens(null);
           set({ user: null, isLoggedIn: false, hydrated: true, twoFactorChallenge: null });
           void import("@/lib/cart-store").then(({ useCart }) => useCart.getState().refresh());
         }

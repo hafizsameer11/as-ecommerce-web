@@ -1,10 +1,13 @@
-import { apiBaseUrl } from "@/lib/api/client";
+import { apiBaseUrl, loadTokens } from "@/lib/api/client";
 import { accountApi } from "@/lib/api/account";
 import { openPaymentAndVerify } from "@/lib/open-payment";
 
 export async function downloadOrderInvoice(apiId: string, filename: string) {
   const url = `${apiBaseUrl()}/api/v1/store/me/orders/${encodeURIComponent(apiId)}/invoice.pdf`;
-  const res = await fetch(url, { credentials: "include" });
+  const tokens = loadTokens();
+  const headers: Record<string, string> = {};
+  if (tokens?.accessToken) headers.Authorization = `Bearer ${tokens.accessToken}`;
+  const res = await fetch(url, { credentials: "include", headers });
   if (!res.ok) {
     let msg = res.statusText;
     try {
