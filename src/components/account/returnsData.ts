@@ -1,6 +1,8 @@
 import { create } from "zustand";
 import { Package, Clock, ShieldCheck, LucideIcon } from "lucide-react";
 import { accountApi, type ApiReturnCard } from "@/lib/api/account";
+import type { PublicSettings } from "@/lib/api/auth";
+import { refundProcessingLabel, returnWindowDays } from "@/lib/public-settings-format";
 
 export type ReturnStatus = "In Progress" | "Approved" | "Completed" | "Rejected";
 
@@ -33,12 +35,15 @@ export type ReturnStat = {
   cta: string;
 };
 
-export const returnStats: ReturnStat[] = [
+export function returnStatsFromSettings(settings?: PublicSettings | null): ReturnStat[] {
+  const days = returnWindowDays(settings);
+  const refund = refundProcessingLabel(settings);
+  return [
   {
     id: "window",
     Icon: Clock,
     title: "Return window",
-    value: "14 days",
+    value: `${days} days`,
     sub: "From delivery date",
     cta: "Read policy",
   },
@@ -54,11 +59,15 @@ export const returnStats: ReturnStat[] = [
     id: "time",
     Icon: ShieldCheck,
     title: "Refunds",
-    value: "5–7 days",
+    value: refund,
     sub: "After inspection",
     cta: "Refund details",
   },
 ];
+}
+
+/** @deprecated Use returnStatsFromSettings(settings) */
+export const returnStats: ReturnStat[] = returnStatsFromSettings(null);
 
 function mapReturn(r: ApiReturnCard): ReturnRequest {
   const status = (r.statusLabel || r.status || "In Progress") as ReturnStatus;

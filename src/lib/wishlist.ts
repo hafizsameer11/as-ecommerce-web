@@ -1,6 +1,8 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { commerceApi } from "@/lib/api/commerce";
+import { toast } from "sonner";
+import { ApiError } from "@/lib/api/client";
 import { useAuth } from "@/lib/auth-store";
 
 export type WishlistVariation = { size?: string; color?: string };
@@ -69,6 +71,7 @@ export const useWishlist = create<WishlistState>()(
           .then(() => get().refresh())
           .catch((err) => {
             console.warn("[wishlist] sync failed", err);
+            toast.error(err instanceof ApiError ? err.message : "Could not update wishlist");
             void get().refresh();
           });
       },

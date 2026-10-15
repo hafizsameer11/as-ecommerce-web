@@ -3,6 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { HelpCircle, BarChart3, Settings2, Megaphone, ListChecks, Building2, Pencil, Phone, Mail, MapPin, Cookie } from "lucide-react";
 import { CustomerCareScaffold } from "@/components/customer-care/CustomerCareScaffold";
+import { getCookieConsent, saveCookieConsent } from "@/lib/cookie-consent";
 
 export const Route = createFileRoute("/customer-care/cookie-policy")({
   head: () => ({
@@ -30,8 +31,10 @@ const sections = [
   { Icon: Phone, title: "6. Contact Us", body: "If you have any questions about this Cookie Policy, please contact us." },
 ];
 
+const allPreferences = { performance: true, functional: true, advertising: true };
+
 function CookiePolicy() {
-  const [accepted, setAccepted] = useState(false);
+  const [accepted, setAccepted] = useState(() => getCookieConsent() !== null);
   return (
     <CustomerCareScaffold
       activeId="cookie-policy"
@@ -83,6 +86,7 @@ function CookiePolicy() {
         </div>
         <button
           onClick={() => {
+            saveCookieConsent(allPreferences);
             setAccepted(true);
             toast.success("Cookie preferences saved.");
           }}

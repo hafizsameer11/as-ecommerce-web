@@ -1,10 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { z } from "zod";
 import { Toaster } from "sonner";
 import { useIsDesktop } from "@/hooks/use-breakpoint";
 import { DesktopStartRequest } from "@/components/request/DesktopStartRequest";
 import { MobileStartRequest } from "@/components/request/MobileStartRequest";
 
 export const Route = createFileRoute("/start-request")({
+  validateSearch: z.object({ productId: z.string().optional() }),
   head: () => ({
     meta: [
       { title: "Start a Request - ASL ORIGINALS Concierge" },
@@ -18,9 +20,10 @@ export const Route = createFileRoute("/start-request")({
 
 function StartRequestPage() {
   const isDesktop = useIsDesktop();
+  const { productId } = Route.useSearch();
   return (
     <>
-      {isDesktop ? <DesktopStartRequest /> : <MobileStartRequest />}
+      {isDesktop ? <DesktopStartRequest productId={productId} /> : <MobileStartRequest productId={productId} />}
       <Toaster position="top-center" />
     </>
   );

@@ -7,6 +7,7 @@ import { loyaltyApi, koboToNaira, type ApiDrop } from "@/lib/api/loyalty";
 import { mapApiProduct, rememberApiMeta } from "@/lib/api/product-mapper";
 import type { ApiProductCard } from "@/lib/api/catalog";
 import type { Drop } from "@/lib/coming-soon";
+import { defaultDepositPct } from "@/lib/public-settings-format";
 
 function mapOne(d: ApiDrop): Drop {
   const card = {
@@ -24,7 +25,7 @@ function mapOne(d: ApiDrop): Drop {
   } as unknown as ApiProductCard;
   rememberApiMeta(card);
   const product = mapApiProduct(card);
-  const pct = d.depositPct ?? 50;
+  const pct = d.depositPct ?? defaultDepositPct(undefined);
   const deposit = d.deposit != null ? koboToNaira(d.deposit) : Math.round(product.price * (pct / 100));
   const balance = d.balance != null ? koboToNaira(d.balance) : product.price - deposit;
   return {
@@ -64,10 +65,11 @@ export const Route = createFileRoute("/drop/$dropId")({
         ],
       };
     }
-    const title = `${d.product.brand} ${d.product.name} - Reserve with 50% | ASL ORIGINALS`;
+    const pct = d.depositPct ?? defaultDepositPct(undefined);
+    const title = `${d.product.brand} ${d.product.name} - Reserve with ${pct}% | ASL ORIGINALS`;
     const description = `Reserve the ${d.product.brand} ${d.product.name} ahead of its ${formatDropDate(
       d.releaseAt,
-    )} release with a 50% deposit. Balance payable on release day.`;
+    )} release with a ${pct}% deposit. Balance payable on release day.`;
     return {
       meta: [
         { title },

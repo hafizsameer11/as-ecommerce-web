@@ -36,4 +36,25 @@ export function saveCookieConsent(preferences: Omit<CookieConsent, "essential" |
   };
   window.localStorage.setItem(COOKIE_CONSENT_KEY, JSON.stringify(consent));
   window.dispatchEvent(new CustomEvent("asl:cookie-consent-updated", { detail: consent }));
+  void syncCookieConsentToAccount(preferences);
+}
+
+/** When signed in, mirror cookie choices onto customer privacy preferences. */
+export async function syncCookieConsentToAccount(
+  preferences: Omit<CookieConsent, "essential" | "savedAt">
+) {
+  try {
+    const { useAuth } = await import("@/lib/auth-store");
+    if (!useAuth.getState().isLoggedIn) return;
+    const { storeAuthApi } = await import("@/lib/api/auth");
+    await storeAuthApi.updatePreferences({
+      privacy: {
+        analytics: preferences.performance,
+        personalization: preferences.functional,
+        marketingCookies: preferences.advertising,
+      },
+    });
+  } catch (err) {
+    console.warn("[cookie-consent] sync preferences failed", err);
+  }
 }

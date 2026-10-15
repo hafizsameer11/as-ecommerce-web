@@ -1,7 +1,43 @@
 import { Package, Truck, MapPin, CheckCircle2 } from "lucide-react";
 import type { Order } from "./ordersData";
 
+function fmtAt(at: string) {
+  try {
+    return new Date(at).toLocaleString("en-NG", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  } catch {
+    return at;
+  }
+}
+
 export function OrderProgressTimeline({ order }: { order: Order }) {
+  if (order.timeline && order.timeline.length > 0) {
+    return (
+      <ol className="space-y-4">
+        {order.timeline.map((step, index) => (
+          <li key={`${step.type}-${step.at}-${index}`} className="flex gap-3">
+            <div className="flex flex-col items-center">
+              <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-ink text-paper">
+                <Package className="h-4 w-4" />
+              </div>
+              {index < order.timeline!.length - 1 && <div className="w-0.5 flex-1 bg-ink" />}
+            </div>
+            <div className="min-h-[3.25rem] flex-1 pb-4">
+              <div className="text-[13px] font-semibold text-foreground">{step.title}</div>
+              {step.detail ? <div className="text-[11px] text-muted-foreground">{step.detail}</div> : null}
+              <div className="text-[11px] text-muted-foreground mt-0.5">{fmtAt(step.at)}</div>
+            </div>
+          </li>
+        ))}
+      </ol>
+    );
+  }
+
   const shipped = order.status === "Shipped" || order.status === "Delivered";
   const steps = [
     { id: "placed", label: "Order Placed", desc: order.date, Icon: Package, done: true },

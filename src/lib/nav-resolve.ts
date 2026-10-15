@@ -1,6 +1,11 @@
 // Central mapping from human labels to app routes so we can eliminate
 // dead " - coming soon" placeholders across the app.
 
+import { storeProfileContact } from "@/lib/public-settings-format";
+import { usePublicSettingsStore } from "@/lib/public-settings-store";
+
+const profileContact = () => storeProfileContact(usePublicSettingsStore.getState().settings);
+
 export type NavTarget =
   | { kind: "route"; to: string }
   | { kind: "external"; href: string }
@@ -66,9 +71,10 @@ add(["Details", "Personal Details"], { kind: "route", to: "/account/details" });
 
 // External
 add(["Chat", "Chat with Us", "Chat with Us (WhatsApp)", "WhatsApp", "Opening WhatsApp"], {
-  kind: "external", href: "https://wa.me/2348001234567",
+  kind: "external", href: profileContact().whatsappUrl,
 });
-add(["Email"], { kind: "external", href: "mailto:customerservice@asloriginals.com" });
+add(["Email"], { kind: "external", href: profileContact().mailtoUrl });
+add(["Call", "Calling", "Phone"], { kind: "external", href: profileContact().telUrl });
 add(["Instagram", "Follow Us"], { kind: "external", href: "https://instagram.com" });
 add(["Facebook"], { kind: "external", href: "https://facebook.com" });
 add(["Twitter", "X"], { kind: "external", href: "https://twitter.com" });
@@ -77,7 +83,14 @@ add(["App Store"], { kind: "external", href: "https://apps.apple.com" });
 
 export function resolveNav(label: string): NavTarget {
   const clean = label.replace(/\s+/g, " ").replace("\n", " ").trim();
-  return map[clean.toLowerCase()] ?? { kind: "none" };
+  const key = clean.toLowerCase();
+  const contact = profileContact();
+  if (["chat", "chat with us", "chat with us (whatsapp)", "whatsapp", "opening whatsapp"].includes(key)) {
+    return { kind: "external", href: contact.whatsappUrl };
+  }
+  if (key === "email") return { kind: "external", href: contact.mailtoUrl };
+  if (["call", "calling", "phone"].includes(key)) return { kind: "external", href: contact.telUrl };
+  return map[key] ?? { kind: "none" };
 }
 
 /**

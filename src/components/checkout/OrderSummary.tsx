@@ -43,12 +43,8 @@ export function OrderSummary({
   const { data: publicSettings } = usePublicSettings();
   const freeShipThreshold = freeShippingThresholdNaira(publicSettings);
   const returnDays = returnWindowDays(publicSettings);
-  const freeShippingDetail =
-    freeShipThreshold != null ? `On orders over ${naira(freeShipThreshold)}` : "On orders over ₦50,000";
-  const returnsDetail =
-    returnDays != null
-      ? `${returnDays}-day return or exchange on eligible items.`
-      : "7-day return or exchange on eligible items.";
+  const freeShippingDetail = `On orders over ${naira(freeShipThreshold)}`;
+  const returnsDetail = `${returnDays}-day return or exchange on eligible items.`;
 
   return (
     <div className={variant === "sidebar" ? "bg-muted/40 border border-border rounded-md p-3 space-y-2.5 md:space-y-3" : "space-y-2.5 md:space-y-3"}>

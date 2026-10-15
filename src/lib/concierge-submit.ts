@@ -21,11 +21,16 @@ function parseBudgetNaira(raw: string): number | undefined {
   return n;
 }
 
-export async function submitConciergeRequest(form: ConciergeFormFields, files?: File[]) {
+export async function submitConciergeRequest(
+  form: ConciergeFormFields,
+  files?: File[],
+  extra?: { productId?: string }
+) {
   const budgetNaira = parseBudgetNaira(form.budget);
   return loyaltyApi.createConciergeRequest(
     {
-      source: "form",
+      source: extra?.productId ? "product" : "form",
+      productId: extra?.productId,
       itemName: form.name.trim(),
       category: form.category,
       size: form.size || undefined,

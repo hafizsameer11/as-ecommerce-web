@@ -44,6 +44,41 @@ function toAuthUser(c: CustomerDto): AuthUser {
   };
 }
 
+async function clearUserPersistedStores() {
+  const [{ useOrders }, { useWallet }, { useWishlist }, { useMyCoupons }, { useCheckout }, { useNotify }] =
+    await Promise.all([
+      import("@/lib/orders-store"),
+      import("@/lib/wallet-store"),
+      import("@/lib/wishlist"),
+      import("@/lib/my-coupons-store"),
+      import("@/lib/checkout-store"),
+      import("@/lib/reviews"),
+    ]);
+  useOrders.setState({ orders: [], hydrated: false });
+  useWallet.setState({ balance: 0, totalSpent: 0, txns: [], hydrated: false });
+  useWishlist.setState({ ids: [], variations: {} });
+  useMyCoupons.setState({ coupons: [] });
+  useNotify.setState({ items: {} });
+  useCheckout.setState({
+    contact: { email: "", phone: "", subscribe: false },
+    address: {
+      fullName: "",
+      address: "",
+      apartment: "",
+      city: "",
+      state: "",
+      postal: "",
+      country: "Nigeria",
+    },
+    delivery: "ship",
+    payment: "paystack",
+    coupon: null,
+    discountPct: 0,
+    discountAmount: 0,
+    shippingAmount: 0,
+  });
+}
+
 async function afterAuthMerge() {
   try {
     const [{ useCart }, { useWishlist }, { useMyCoupons }, { useOrders }, { useWallet }] =
@@ -122,9 +157,13 @@ export const useAuth = create<AuthState>()(
         } catch {
           /* still clear local session */
         }
+        await clearUserPersistedStores();
         set({ user: null, isLoggedIn: false, twoFactorChallenge: null });
       },
-      completeOnboarding: () => set({ hasOnboarded: true }),
+      completeOnboarding: () => {
+        set({ hasOnboarded: true });
+        void storeAuthApi.completeOnboarding().catch((err) => console.warn("[auth] onboarding", err));
+      },
       openLogin: (mode = "signin", next) =>
         set({ isLoginOpen: true, loginMode: mode, loginNext: next, twoFactorChallenge: null }),
       closeLogin: () => set({ isLoginOpen: false, twoFactorChallenge: null }),

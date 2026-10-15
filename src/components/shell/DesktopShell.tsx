@@ -8,6 +8,8 @@ import { fadeInUp, buttonTap, staggerContainer, staggerItem } from "@/lib/motion
 import { useCartCount } from "@/lib/cart-store";
 import { useWishlistCount } from "@/lib/wishlist";
 import { useAuth } from "@/lib/auth-store";
+import { usePublicSettings } from "@/lib/api/settings";
+import { storeProfileContact } from "@/lib/public-settings-format";
 import { subCategories } from "@/lib/shop-data";
 import { PaymentBrandLogos } from "@/components/checkout/PaymentBrandLogos";
 import wordmarkWhite from "@/assets/ASL_wordmark_white.png";
@@ -54,6 +56,8 @@ export function DesktopShell({
   children: ReactNode;
   active?: string;
 }) {
+  const { data: publicSettings } = usePublicSettings();
+  const contact = storeProfileContact(publicSettings);
   const [email, setEmail] = useState("");
   const [shopOpen, setShopOpen] = useState(false);
   const [drawer, setDrawer] = useState(false);
@@ -543,8 +547,8 @@ export function DesktopShell({
             <div className="md:col-span-3">
               <div className="text-gold text-[10px] font-bold tracking-[0.2em] uppercase mb-8">Contact Details</div>
               <div className="space-y-4 text-xs font-light">
-                <a href="mailto:customerservice@asloriginals.com" className="block text-paper/80 hover:text-gold transition-colors">customerservice@asloriginals.com</a>
-                <a href="tel:+2348001234567" className="block text-paper/80 hover:text-gold transition-colors">+234 800 123 4567</a>
+                <a href={contact.mailtoUrl} className="block text-paper/80 hover:text-gold transition-colors">{contact.supportEmail}</a>
+                <a href={contact.telUrl} className="block text-paper/80 hover:text-gold transition-colors">{contact.supportPhone}</a>
                 <p className="text-paper/60 leading-relaxed italic font-display">
                   Lekki Phase 1,<br />Lagos, Nigeria
                 </p>

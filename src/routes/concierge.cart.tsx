@@ -89,10 +89,10 @@ function ConciergeCartPage() {
                 </div>
                 <div className="hidden md:block text-[13px] font-semibold">{naira(i.price)}</div>
                 <div className="col-span-2 md:col-span-1 flex items-center gap-3 mt-2 md:mt-0">
-                  <div className="inline-flex items-center border border-border rounded">
-                    <button className="p-1.5" onClick={() => toast("Qty updated")}><Minus className="h-3 w-3" /></button>
+                  <div className="inline-flex items-center border border-border rounded opacity-50 pointer-events-none" aria-hidden>
+                    <span className="p-1.5"><Minus className="h-3 w-3" /></span>
                     <span className="px-3 text-[13px] font-semibold">{i.qty}</span>
-                    <button className="p-1.5" onClick={() => toast("Qty updated")}><Plus className="h-3 w-3" /></button>
+                    <span className="p-1.5"><Plus className="h-3 w-3" /></span>
                   </div>
                   <div className="md:hidden ml-auto text-[13px] font-semibold">{naira(i.price)}</div>
                 </div>

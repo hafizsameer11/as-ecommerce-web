@@ -2,6 +2,8 @@ import type { Product } from "./shop-data";
 import { loyaltyApi, koboToNaira, type ApiDrop } from "@/lib/api/loyalty";
 import { mapApiProduct, rememberApiMeta } from "@/lib/api/product-mapper";
 import type { ApiProductCard } from "@/lib/api/catalog";
+import { usePublicSettingsStore } from "@/lib/public-settings-store";
+import { defaultDepositPct } from "@/lib/public-settings-format";
 
 export type Drop = {
   id: string;
@@ -18,11 +20,12 @@ export type Drop = {
   balance: number;
 };
 
-/** Deposit rate required to reserve an upcoming drop (fallback when API omits pct). */
-export const DEPOSIT_RATE = 0.5;
+function resolveDepositPct(pct?: number) {
+  return pct ?? defaultDepositPct(usePublicSettingsStore.getState().settings);
+}
 
-export const depositFor = (price: number, pct = DEPOSIT_RATE * 100) => Math.round(price * (pct / 100));
-export const balanceFor = (price: number, pct = DEPOSIT_RATE * 100) => price - depositFor(price, pct);
+export const depositFor = (price: number, pct?: number) => Math.round(price * (resolveDepositPct(pct) / 100));
+export const balanceFor = (price: number, pct?: number) => price - depositFor(price, pct);
 
 let cache: Drop[] = [];
 let hydrated = false;
@@ -56,7 +59,7 @@ function mapDrop(d: ApiDrop): Drop {
   } as unknown as ApiProductCard;
   rememberApiMeta(card);
   const product = mapApiProduct(card);
-  const pct = d.depositPct ?? 50;
+  const pct = d.depositPct ?? defaultDepositPct(usePublicSettingsStore.getState().settings);
   const deposit = d.deposit != null ? koboToNaira(d.deposit) : depositFor(product.price, pct);
   const balance = d.balance != null ? koboToNaira(d.balance) : product.price - deposit;
   return {

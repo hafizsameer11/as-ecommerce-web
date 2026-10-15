@@ -21,6 +21,9 @@ export type ApiOrderCard = {
   itemsCount: number;
   eta?: string | null;
   tracking?: string | null;
+  canCancel?: boolean;
+  canPay?: boolean;
+  canReturn?: boolean;
   items: {
     name: string;
     brand?: string | null;
@@ -38,11 +41,10 @@ export type ApiOrderDetail = ApiOrderCard & {
   shipping: number;
   delivery?: string;
   payment?: string;
+  amountPaid?: number;
+  due?: number;
   contact?: { email?: string; phone?: string; subscribe?: boolean } | null;
   address?: Record<string, string> | null;
-  canCancel?: boolean;
-  canPay?: boolean;
-  canReturn?: boolean;
   timeline?: { type: string; title: string; detail?: string | null; at: string }[];
 };
 
@@ -157,6 +159,16 @@ export const accountApi = {
 
   reorder: (id: string) =>
     apiRequest(`/store/me/orders/${encodeURIComponent(id)}/reorder`, { method: "POST" }),
+
+  payOrder: (id: string, returnUrl?: string) =>
+    apiRequest<{ authorizationUrl?: string | null; reference: string }>(
+      `/store/me/orders/${encodeURIComponent(id)}/pay`,
+      {
+        method: "POST",
+        body: { returnUrl: returnUrl ?? null },
+        idempotencyKey: `op_${crypto.randomUUID()}`,
+      },
+    ),
 
   lookupOrder: (orderNumber: string, email: string) =>
     apiRequest<ApiOrderDetail>("/store/orders/lookup", {

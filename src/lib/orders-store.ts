@@ -5,7 +5,7 @@ import type { CartItem } from "@/lib/cart-store";
 import type { CheckoutAddress, CheckoutContact, DeliveryMethod, PaymentMethod } from "@/lib/checkout-store";
 import { balanceFor, depositFor, getDropById } from "@/lib/coming-soon";
 import { formatCartSize, getProductById, getProductSizeLabel } from "@/lib/shop-data";
-import { accountApi, koboToNaira, type ApiOrderCard } from "@/lib/api/account";
+import { accountApi, koboToNaira, type ApiOrderCard, type ApiOrderDetail } from "@/lib/api/account";
 
 export type OrderReservation = {
   dropId: string;
@@ -53,6 +53,7 @@ type State = {
   orders: PlacedOrder[];
   hydrated: boolean;
   hydrate: () => Promise<void>;
+  hydrateOrder: (id: string) => Promise<PlacedOrder | undefined>;
   createOrder: (args: CreateArgs) => PlacedOrder;
   recordPlacedOrder: (args: CreateArgs & { id: string; total?: number }) => PlacedOrder;
   getById: (id: string) => PlacedOrder | undefined;
@@ -122,6 +123,10 @@ function mapApiCard(o: ApiOrderCard): PlacedOrder {
     apiId: o.id,
     date: fmtDate(placed),
     status: normalizeStatus(o.status),
+    paymentStatus: o.paymentStatus,
+    canCancel: o.canCancel,
+    canPay: o.canPay,
+    canReturn: o.canReturn,
     total,
     itemsCount: o.itemsCount,
     eta: o.eta ? fmtDate(new Date(o.eta)) : undefined,
@@ -143,6 +148,51 @@ function mapApiCard(o: ApiOrderCard): PlacedOrder {
     delivery: "ship",
     payment: "paystack",
     placedAt: placed.getTime(),
+  };
+}
+
+function mapApiDetail(o: ApiOrderDetail): PlacedOrder {
+  const base = mapApiCard(o);
+  const addr = o.address;
+  const delivery =
+    o.delivery === "pickup" || o.delivery === "ship" ? (o.delivery as DeliveryMethod) : base.delivery;
+  const payment =
+    o.payment === "paystack" || o.payment === "bank" || o.payment === "card" || o.payment === "wallet"
+      ? (o.payment as PaymentMethod)
+      : base.payment;
+  return {
+    ...base,
+    subtotal: o.subtotal != null ? koboToNaira(o.subtotal) : base.subtotal,
+    discount: o.discount != null ? koboToNaira(o.discount) : 0,
+    couponCode: o.couponCode ?? null,
+    shipping: o.shipping != null ? koboToNaira(o.shipping) : 0,
+    delivery,
+    payment,
+    address: addr
+      ? {
+          fullName: String(addr.fullName || addr.recipient || ""),
+          address: String(addr.line1 || addr.address || ""),
+          apartment: String(addr.line2 || addr.apartment || ""),
+          city: String(addr.city || ""),
+          state: String(addr.state || ""),
+          postal: String(addr.postalCode || addr.postal || ""),
+          country: String(addr.country || "Nigeria"),
+        }
+      : null,
+    contact: o.contact
+      ? {
+          email: o.contact.email || "",
+          phone: o.contact.phone || "",
+          subscribe: !!o.contact.subscribe,
+        }
+      : null,
+    timeline: o.timeline,
+    amountPaid: o.amountPaid != null ? koboToNaira(o.amountPaid) : undefined,
+    due: o.due != null ? koboToNaira(o.due) : undefined,
+    canCancel: o.canCancel ?? base.canCancel,
+    canPay: o.canPay ?? base.canPay,
+    canReturn: o.canReturn ?? base.canReturn,
+    paymentStatus: o.paymentStatus ?? base.paymentStatus,
   };
 }
 
@@ -205,6 +255,19 @@ export const useOrders = create<State>()(
         } catch (err) {
           console.warn("[orders] hydrate failed", err);
           set({ hydrated: true });
+        }
+      },
+      hydrateOrder: async (id) => {
+        try {
+          const detail = await accountApi.myOrder(id);
+          const mapped = mapApiDetail(detail);
+          set((s) => ({
+            orders: [mapped, ...s.orders.filter((o) => o.id !== mapped.id && o.apiId !== mapped.apiId)],
+          }));
+          return mapped;
+        } catch (err) {
+          console.warn("[orders] hydrateOrder failed", err);
+          return get().getById(id);
         }
       },
       createOrder: (args) => {

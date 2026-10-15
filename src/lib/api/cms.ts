@@ -103,7 +103,15 @@ export type ContactResult = {
   message?: string;
 };
 
+export type NotifPreferences = {
+  channels: { push: boolean; email: boolean; sms: boolean };
+  topics: { orders: boolean; concierge: boolean; shipping: boolean; promos: boolean; wishlist: boolean };
+};
+
 export const cmsApi = {
+  feedback: (body: { type: "idea" | "bug" | "praise"; area?: string; message: string; email?: string }) =>
+    apiRequest("/store/feedback", { method: "POST", body }),
+
   banners: (query: { placement?: string; device?: "mobile" | "desktop" } = {}) =>
     apiRequest<StoreBanner[]>(`/store/banners${qs(query)}`),
 
@@ -129,9 +137,9 @@ export const cmsApi = {
   markAllRead: (category?: string) =>
     apiRequest("/store/me/notifications/read-all", { method: "POST", body: { category } }),
 
-  notificationPreferences: () => apiRequest("/store/me/notification-preferences"),
+  notificationPreferences: () => apiRequest<NotifPreferences>("/store/me/notification-preferences"),
   updateNotificationPreferences: (body: Record<string, unknown>) =>
-    apiRequest("/store/me/notification-preferences", { method: "PUT", body }),
+    apiRequest<NotifPreferences>("/store/me/notification-preferences", { method: "PUT", body }),
 
   myTickets: (query: { tab?: string } = {}) =>
     apiRequest<ApiTicket[]>(`/store/me/tickets${qs(query)}`),

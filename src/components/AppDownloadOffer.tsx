@@ -4,12 +4,11 @@ import { X, Copy, Check } from "lucide-react";
 import offerImage from "@/assets/hero-sneakers.jpg";
 import { toast } from "sonner";
 import { useAppDownloadOffer } from "@/hooks/use-app-download-offer";
+import { useAppDownload } from "@/lib/app-download-store";
 import { useMyCoupons } from "@/lib/my-coupons-store";
 import { useCheckout } from "@/lib/checkout-store";
 import { useCartCount } from "@/lib/cart-store";
 
-const COUPON_CODE = "APP10";
-const PCT = 10;
 const APP_STORE_URL = "#";
 const PLAY_STORE_URL = "#";
 
@@ -33,33 +32,43 @@ function GooglePlayLogo({ className }: { className?: string }) {
 }
 
 export function AppDownloadOffer() {
-  const { mounted, open, close, claim, markInstalled } = useAppDownloadOffer();
+  const { mounted, open, close, claim, markInstalled, offer, claimResult } = useAppDownloadOffer();
+  const claimOffer = useAppDownload((s) => s.claim);
   const [copied, setCopied] = useState(false);
   const [unlocked, setUnlocked] = useState(false);
   const addCoupon = useMyCoupons((s) => s.add);
   const applyCoupon = useCheckout((s) => s.applyCoupon);
   const cartCount = useCartCount();
 
+  const pct = claimResult?.pct ?? offer?.percent ?? 10;
+  const couponCode = claimResult?.code ?? "APP10";
+  const rewardLabel = claimResult?.label ?? offer?.label ?? "App Download Reward";
+
   if (!mounted || !open) return null;
 
   const handleDownload = (url: string) => {
     markInstalled();
     setUnlocked(true);
-    addCoupon({ code: COUPON_CODE, pct: PCT, label: "App Download Reward", source: "promo" });
-    if (cartCount > 0) {
-      void Promise.resolve(applyCoupon(COUPON_CODE)).then((res) => {
-        if (res.ok) toast.success(`${COUPON_CODE} applied — ${PCT}% off`);
-        else toast.success(`Coupon ${COUPON_CODE} saved to your account`);
-      });
-    } else {
-      toast.success(`Coupon ${COUPON_CODE} saved to your account`);
-    }
+    void claimOffer().then((result) => {
+      const code = result?.code ?? couponCode;
+      const discount = result?.pct ?? pct;
+      const label = result?.label ?? rewardLabel;
+      addCoupon({ code, pct: discount, label, source: "promo" });
+      if (cartCount > 0) {
+        void Promise.resolve(applyCoupon(code)).then((res) => {
+          if (res.ok) toast.success(`${code} applied — ${discount}% off`);
+          else toast.success(`Coupon ${code} saved to your account`);
+        });
+      } else {
+        toast.success(`Coupon ${code} saved to your account`);
+      }
+    });
     if (url && url !== "#") window.open(url, "_blank", "noopener");
   };
 
   const copyCode = async () => {
     try {
-      await navigator.clipboard.writeText(COUPON_CODE);
+      await navigator.clipboard.writeText(couponCode);
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch {
@@ -103,21 +112,21 @@ export function AppDownloadOffer() {
             </div>
 
             <h2 className="font-display text-[19px] font-bold uppercase leading-tight text-foreground">
-              10% off your first app order
+              {pct}% off your first app order
             </h2>
             <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground">
-              Download the <span className="font-semibold text-foreground">ASL ORIGINALS</span> app and enjoy 10% off your first app order. Limit one use per customer.
+              Download the <span className="font-semibold text-foreground">ASL ORIGINALS</span> app and enjoy {pct}% off your first app order. Limit one use per customer.
             </p>
 
             <div className="mt-3 rounded-md border border-border bg-muted/40 px-3 py-2.5">
               <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
                   <div className="flex h-8 w-8 items-center justify-center rounded bg-ink text-paper">
-                    <span className="font-display text-[11px] font-bold">{PCT}%</span>
+                    <span className="font-display text-[11px] font-bold">{pct}%</span>
                   </div>
                   <div>
                     <div className="text-[9px] uppercase tracking-widest text-muted-foreground">Your code</div>
-                    <div className="font-display text-[15px] font-bold tracking-wide text-foreground">{COUPON_CODE}</div>
+                    <div className="font-display text-[15px] font-bold tracking-wide text-foreground">{couponCode}</div>
                   </div>
                 </div>
                 <button

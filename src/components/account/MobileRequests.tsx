@@ -82,7 +82,7 @@ export function MobileRequests() {
                 key={r.id}
                 variants={staggerItem}
                 whileTap={{ scale: 0.99 }}
-                onClick={() => navigate({ to: "/track-request", search: { id: r.id } })}
+                onClick={() => navigate({ to: "/account/requests/$id", params: { id: r.id } })}
                 className="w-full flex items-center gap-2.5 p-2.5 border border-border rounded-md bg-card text-left"
               >
                 <img src={r.image} alt={r.name} className="h-14 w-14 rounded-md object-cover bg-muted shrink-0" />

@@ -99,7 +99,7 @@ export function DesktopRequests() {
                 <motion.button
                   key={r.id}
                   variants={staggerItem}
-                  onClick={() => navigate({ to: "/track-request", search: { id: r.id } })}
+                  onClick={() => navigate({ to: "/account/requests/$id", params: { id: r.id } })}
                   className="w-full grid grid-cols-[80px_1.4fr_1fr_1.2fr_20px] items-center gap-4 border border-border rounded-lg bg-card p-4 text-left hover:shadow-sm transition-shadow"
                 >
                   <img src={r.image} alt={r.name} className="h-16 w-16 rounded-md object-cover bg-muted" />

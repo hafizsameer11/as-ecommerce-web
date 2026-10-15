@@ -20,6 +20,13 @@ export type OrderItem = {
   image: string;
 };
 
+export type OrderTimelineEntry = {
+  type: string;
+  title: string;
+  detail?: string | null;
+  at: string;
+};
+
 export type Order = {
   id: string;
   date: string;
@@ -29,6 +36,13 @@ export type Order = {
   eta?: string;
   tracking?: string;
   items: OrderItem[];
+  paymentStatus?: string;
+  canCancel?: boolean;
+  canPay?: boolean;
+  canReturn?: boolean;
+  timeline?: OrderTimelineEntry[];
+  amountPaid?: number;
+  due?: number;
 };
 
 export const orderStats: { id: string; label: string; value: string; Icon: LucideIcon; cta: string }[] = [

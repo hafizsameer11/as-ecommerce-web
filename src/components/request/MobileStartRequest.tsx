@@ -1,5 +1,6 @@
 import { MobileShell } from "@/components/shell/MobileShell";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { fetchProductById } from "@/lib/catalog-product-cache";
 import { goToLabel } from "@/lib/nav-resolve";
 import { motion } from "framer-motion";
 import { Link, useNavigate } from "@tanstack/react-router";
@@ -41,12 +42,25 @@ function Select({ value, onChange, placeholder, options }: { value: string; onCh
   );
 }
 
-export function MobileStartRequest() {
+export function MobileStartRequest({ productId }: { productId?: string }) {
   const navigate = useNavigate();
   const [form, setForm] = useState({ name: "", category: "", size: "", colour: "", condition: "", link: "", desc: "", budget: "", source: "", notes: "" });
   const [files, setFiles] = useState<File[]>([]);
   const [busy, setBusy] = useState(false);
   const set = <K extends keyof typeof form>(k: K, v: string) => setForm((f) => ({ ...f, [k]: v }));
+
+  useEffect(() => {
+    if (!productId) return;
+    void fetchProductById(productId).then((p) => {
+      if (!p) return;
+      setForm((f) => ({
+        ...f,
+        name: f.name || `${p.brand} ${p.name}`.trim(),
+        category: f.category || (categoryOptions.includes(p.category) ? p.category : f.category),
+        link: f.link || `${typeof window !== "undefined" ? window.location.origin : ""}/product/${p.id}`,
+      }));
+    });
+  }, [productId]);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,7 +71,7 @@ export function MobileStartRequest() {
     setBusy(true);
     try {
       const { submitConciergeRequest } = await import("@/lib/concierge-submit");
-      await submitConciergeRequest(form, files);
+      await submitConciergeRequest(form, files, { productId });
       toast.success("Request submitted - we'll get back to you within 24 - 48 hours");
       setForm({ name: "", category: "", size: "", colour: "", condition: "", link: "", desc: "", budget: "", source: "", notes: "" });
       setFiles([]);

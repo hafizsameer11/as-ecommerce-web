@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { z } from "zod";
 import { useRef, useState } from "react";
 import { Check, ShieldCheck, HelpCircle, Info, Lock, Building2 } from "lucide-react";
 import { toast, Toaster } from "sonner";
@@ -10,6 +11,7 @@ import {
 } from "@/components/concierge-checkout/useConciergeCheckout";
 
 export const Route = createFileRoute("/concierge/payment")({
+  validateSearch: z.object({ requestId: z.string().optional() }),
   head: () => ({ meta: [{ title: "Concierge - Proceed to Payment" }] }),
   component: ConciergePaymentPage,
 });
@@ -56,6 +58,7 @@ const input = "w-full border border-border rounded-md px-3 py-2.5 text-[13px] fo
 
 function ConciergePaymentPage() {
   const nav = useNavigate();
+  const { requestId } = Route.useSearch();
   const [method, setMethod] = useState<"paystack" | "transfer">("paystack");
   const [busy, setBusy] = useState(false);
   const { items: conciergeItems, summary } = useConciergeCheckoutState();
@@ -84,6 +87,7 @@ function ConciergePaymentPage() {
     setBusy(true);
     try {
       const res = await payConciergeCart({
+        requestId,
         address: {
           fullName,
           phone,

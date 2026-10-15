@@ -169,6 +169,12 @@ export const loyaltyApi = {
   getConciergeQuote: (requestId: string) =>
     apiRequest(`/store/concierge/requests/${encodeURIComponent(requestId)}/quote`),
 
+  declineConciergeQuote: (requestId: string, reason?: string) =>
+    apiRequest(`/store/concierge/requests/${encodeURIComponent(requestId)}/quote/decline`, {
+      method: "POST",
+      body: { reason },
+    }),
+
   acceptConciergeQuote: (
     requestId: string,
     body: {

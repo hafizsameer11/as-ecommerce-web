@@ -1,6 +1,8 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { commerceApi, mapCartViewToItems, getGuestToken, setGuestToken } from "@/lib/api/commerce";
+import { toast } from "sonner";
+import { ApiError } from "@/lib/api/client";
 
 export type CartItem = {
   id: string;
@@ -106,6 +108,7 @@ export const useCart = create<CartState>()(
           .then((cart) => applyCart(set, cart))
           .catch((err) => {
             console.warn("[cart] add failed", err);
+            toast.error(err instanceof ApiError ? err.message : "Could not add to bag");
             void get().refresh();
           });
       },
@@ -119,6 +122,7 @@ export const useCart = create<CartState>()(
           .then((cart) => applyCart(set, cart))
           .catch((err) => {
             console.warn("[cart] setQty failed", err);
+            toast.error(err instanceof ApiError ? err.message : "Could not update quantity");
             void get().refresh();
           });
       },
@@ -129,6 +133,7 @@ export const useCart = create<CartState>()(
           .then((cart) => applyCart(set, cart))
           .catch((err) => {
             console.warn("[cart] remove failed", err);
+            toast.error(err instanceof ApiError ? err.message : "Could not remove item");
             void get().refresh();
           });
       },

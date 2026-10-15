@@ -4,6 +4,8 @@ import { Toaster, toast } from "sonner";
 import { CreditCard, Building2, Wallet as WalletIcon } from "lucide-react";
 import { AccountInnerScaffold } from "@/components/account/AccountInnerScaffold";
 import { useWallet } from "@/lib/wallet-store";
+import { usePublicSettings } from "@/lib/api/settings";
+import { walletMinTopupNaira } from "@/lib/public-settings-format";
 
 export const Route = createFileRoute("/account/wallet/topup")({
   head: () => ({ meta: [{ title: "Top Up Wallet - ASL ORIGINALS" }, { name: "description", content: "Add funds to your ASL ORIGINALS wallet." }] }),
@@ -16,12 +18,14 @@ const NGN = new Intl.NumberFormat("en-NG");
 function TopUp() {
   const nav = useNavigate();
   const topup = useWallet((s) => s.topup);
+  const { data: publicSettings } = usePublicSettings();
+  const minTopup = walletMinTopupNaira(publicSettings);
   const [amount, setAmount] = useState(25000);
   const [method, setMethod] = useState<"card" | "bank" | "paypal">("card");
   const [busy, setBusy] = useState(false);
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (amount < 500) return toast.error("Minimum top-up is ₦500");
+    if (amount < minTopup) return toast.error(`Minimum top-up is ₦${NGN.format(minTopup)}`);
     if (method === "paypal") return toast.error("PayPal is not available yet — use card or transfer");
     if (busy) return;
     setBusy(true);

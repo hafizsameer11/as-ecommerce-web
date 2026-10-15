@@ -17,6 +17,8 @@ import {
   type Drop,
 } from "@/lib/coming-soon";
 import { useReservations } from "@/lib/reservations-store";
+import { usePublicSettings } from "@/lib/api/settings";
+import { defaultDepositPct } from "@/lib/public-settings-format";
 import { buttonTap, staggerContainer, staggerItem } from "@/lib/motion";
 
 function useNow() {
@@ -115,7 +117,7 @@ function DropCard({ drop, onReserve, compact }: { drop: Drop; onReserve: (d: Dro
         <div className="mt-1.5 flex items-baseline justify-between gap-2">
           <div className="text-sm font-bold text-ink">{formatNaira(drop.product.price)}</div>
           <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
-            50% = {formatNaira(depositFor(drop.product.price))}
+            {drop.depositPct}% = {formatNaira(depositFor(drop.product.price, drop.depositPct))}
           </div>
         </div>
 
@@ -129,7 +131,7 @@ function DropCard({ drop, onReserve, compact }: { drop: Drop; onReserve: (d: Dro
               : "bg-ink text-paper hover:bg-gold"
           }`}
         >
-          {reserved ? "Reservation Held" : "Reserve with 50%"}
+          {reserved ? "Reservation Held" : `Reserve with ${drop.depositPct}%`}
         </motion.button>
 
       </div>
@@ -220,7 +222,7 @@ function ReserveSheet({ drop, onClose }: { drop: Drop | null; onClose: () => voi
                 Reserve this drop
               </div>
               <h3 className="mt-1 font-display text-lg font-bold uppercase tracking-wide text-ink">
-                50% Deposit
+                {drop.depositPct}% Deposit
               </h3>
             </div>
             <button onClick={onClose} aria-label="Close" className="p-1 text-muted-foreground">
@@ -267,7 +269,7 @@ function ReserveSheet({ drop, onClose }: { drop: Drop | null; onClose: () => voi
               <span className="font-medium text-ink">{formatNaira(drop.product.price)}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Deposit due today (50%)</span>
+              <span className="text-muted-foreground">Deposit due today ({drop.depositPct}%)</span>
               <span className="font-bold text-ink">{formatNaira(deposit)}</span>
             </div>
             <div className="flex justify-between">
@@ -284,7 +286,7 @@ function ReserveSheet({ drop, onClose }: { drop: Drop | null; onClose: () => voi
               className="mt-0.5 h-4 w-4 accent-black"
             />
             <span>
-              I understand the 50% deposit secures my allocation and the balance becomes payable when the
+              I understand the {drop.depositPct}% deposit secures my allocation and the balance becomes payable when the
               piece drops. Deposits are refundable up to 48 hours before release.
             </span>
           </label>
@@ -352,6 +354,8 @@ export function ComingSoonContent({ compact = false }: { compact?: boolean }) {
   const [, tick] = useState(0);
   const hydrateReservations = useReservations((s) => s.hydrate);
   const [active, setActive] = useState<Drop | null>(null);
+  const { data: publicSettings } = usePublicSettings();
+  const defaultPct = defaultDepositPct(publicSettings);
 
   useEffect(() => {
     void hydrateDrops();
@@ -381,7 +385,7 @@ export function ComingSoonContent({ compact = false }: { compact?: boolean }) {
             Reserve Yours.
           </h1>
           <p className="mt-3 max-w-[52ch] text-[12px] leading-relaxed text-paper/65 md:text-[15px]">
-            Secure any upcoming piece with a 50% deposit. We hold your size from our allocation and you
+            Secure any upcoming piece with a {defaultPct}% deposit. We hold your size from our allocation and you
             settle the balance the moment it drops.
           </p>
           <div className="mt-5 flex flex-wrap gap-4 text-[10px] uppercase tracking-[0.18em] text-paper/70">
@@ -425,7 +429,7 @@ export function ComingSoonContent({ compact = false }: { compact?: boolean }) {
           </h3>
           <div className="mt-3 grid gap-3 md:grid-cols-3">
             {[
-              ["01", "Pay 50%", "Choose your size and pay half the retail price to lock your allocation."],
+              ["01", `Pay ${defaultPct}%`, "Choose your size and pay the deposit to lock your allocation."],
               ["02", "We hold it", "Your piece is set aside from a limited run - no queue, no restock stress."],
               ["03", "Settle & ship", "On release day you pay the balance and we dispatch immediately."],
             ].map(([n, t, s]) => (

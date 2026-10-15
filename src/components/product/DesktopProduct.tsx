@@ -21,11 +21,17 @@ import { goToLabel } from "@/lib/nav-resolve";
 import { shareProduct } from "@/lib/product-sharing";
 import { useSizeGuideFor } from "@/lib/size-guide-store";
 import { useRelatedProducts } from "@/lib/catalog-product-cache";
+import { usePublicSettings } from "@/lib/api/settings";
+import { freeShippingThresholdNaira, returnWindowDays } from "@/lib/public-settings-format";
 
 const ALL_TABS = ["PRODUCT DETAILS", "REVIEWS", "SHIPPING", "RETURNS"];
 
 export function DesktopProduct({ product, forceConcierge = false, drop }: { product: Product; forceConcierge?: boolean; drop?: Drop }) {
   const navigate = useNavigate();
+  const { data: publicSettings } = usePublicSettings();
+  const freeFrom = freeShippingThresholdNaira(publicSettings);
+  const returnDays = returnWindowDays(publicSettings);
+  const freeFromLabel = new Intl.NumberFormat("en-NG").format(freeFrom);
   const sizeAvail = getSizeAvailability(product);
   const guide = useSizeGuideFor(product.brandHandle ?? product.brand, product.category);
   const firstAvailable = product.sizes.find((s) => sizeAvail[s]) ?? product.sizes[0];
@@ -173,12 +179,12 @@ export function DesktopProduct({ product, forceConcierge = false, drop }: { prod
               )}
               {currentTab === "SHIPPING" && (
                 <div className="mt-5 text-[13px] leading-relaxed text-foreground/85">
-                  Free shipping on orders over ₦50,000. Orders are processed within 1-2 business days. Estimated delivery: 2-5 business days within Nigeria.
+                  {`Free shipping on orders over ₦${freeFromLabel}. Orders are processed within 1-2 business days. Estimated delivery: 2-5 business days within Nigeria.`}
                 </div>
               )}
               {currentTab === "RETURNS" && (
                 <div className="mt-5 text-[13px] leading-relaxed text-foreground/85">
-                  7-day return or exchange policy for eligible items. Items must be unworn, unwashed and in original condition with tags attached.
+                  {`${returnDays}-day return or exchange policy for eligible items. Items must be unworn, unwashed and in original condition with tags attached.`}
                 </div>
               )}
             </div>
@@ -436,7 +442,7 @@ export function DesktopProduct({ product, forceConcierge = false, drop }: { prod
                 <div className="mt-6 grid grid-cols-3 border border-border rounded-lg divide-x divide-border overflow-hidden">
                   {[
                     { icon: StrokeRosetteCheckIcon, title: "100% Authentic", sub: "Authenticity Guaranteed" },
-                    { icon: Truck, title: "Free Shipping", sub: "On orders over ₦50,000" },
+                    { icon: Truck, title: "Free Shipping", sub: `On orders over ₦${freeFromLabel}` },
                     { icon: RefreshCcw, title: "7-Day Returns", sub: "Easy returns & exchanges" },
                   ].map(({ icon: Icon, title, sub }) => (
                     <div key={title} className="flex flex-col items-center text-center px-3 py-4">
@@ -454,7 +460,7 @@ export function DesktopProduct({ product, forceConcierge = false, drop }: { prod
               <div className="space-y-3">
                 {[
                   { icon: StrokeRosetteCheckIcon, title: "AUTHENTIC GUARANTEED", desc: "All items are sourced from trusted suppliers. 100% authentic or your money back. Every item is verified by our experts for authenticity." },
-                  { icon: Truck, title: "SHIPPING", desc: "Free shipping on orders over ₦1,000,000. Next-day delivery available. Orders are typically processed within 1 - 2 working days. Delivery times may vary depending on your location and the delivery option selected at checkout. Nationwide delivery available." },
+                  { icon: Truck, title: "SHIPPING", desc: `Free shipping on orders over ₦${freeFromLabel}. Next-day delivery available. Orders are typically processed within 1 - 2 working days. Delivery times may vary depending on your location and the delivery option selected at checkout. Nationwide delivery available.` },
                   { icon: RefreshCcw, title: "EASY RETURNS", desc: "Eligible items may be returned or exchanged within 7 days of delivery. Items must be unworn, unwashed, unused and returned in their original condition and packaging." },
                   { icon: Lock, title: "SECURE PAYMENTS", desc: "Shop with confidence. Your payment information is securely protected, with multiple trusted payment options available for a safe and seamless checkout." },
                 ].map(({ icon: Icon, title, desc }) => (

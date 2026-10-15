@@ -13,6 +13,8 @@ import promoImage from "@/assets/hero-sneakers.jpg";
 import { bestSellers, newArrivals } from "@/lib/mock-data";
 import { getDrops, formatDropDate, hydrateDrops, subscribeDrops } from "@/lib/coming-soon";
 import { useCatalogVersion } from "@/lib/catalog-version";
+import { usePublicSettings } from "@/lib/api/settings";
+import { defaultDepositPct } from "@/lib/public-settings-format";
 
 export function DesktopHome() {
   useCatalogVersion((s) => s.v);
@@ -22,6 +24,8 @@ export function DesktopHome() {
     return subscribeDrops(() => tick((n) => n + 1));
   }, []);
   const nextDrop = getDrops()[0];
+  const { data: publicSettings } = usePublicSettings();
+  const depositPct = nextDrop?.depositPct ?? defaultDepositPct(publicSettings);
   void tick;
   return (
     <DesktopShell active="Home">
@@ -40,8 +44,8 @@ export function DesktopHome() {
             title={"RESERVE\nBEFORE IT DROPS."}
             subtitle={
               nextDrop
-                ? `${nextDrop.product.brand} ${nextDrop.product.name} lands ${formatDropDate(nextDrop.releaseAt)}. Secure your size with a 50% deposit.`
-                : "Secure upcoming drops with a 50% deposit. Balance payable on release day."
+                ? `${nextDrop.product.brand} ${nextDrop.product.name} lands ${formatDropDate(nextDrop.releaseAt)}. Secure your size with a ${depositPct}% deposit.`
+                : `Secure upcoming drops with a ${depositPct}% deposit. Balance payable on release day.`
             }
             ctaLabel="View Drops"
             ctaTo="/coming-soon"

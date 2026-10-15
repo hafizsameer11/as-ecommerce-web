@@ -339,7 +339,7 @@ export function MobileProduct({ product, forceConcierge = false, drop }: { produ
               <motion.button
                 whileTap="tap"
                 variants={buttonTap}
-                onClick={() => { toast("Added to your request"); navigate({ to: "/start-request" }); }}
+                onClick={() => { toast("Added to your request"); navigate({ to: "/start-request", search: { productId: product.id } }); }}
                 className="flex-1 h-12 bg-ink text-white text-[12px] font-bold uppercase tracking-widest rounded-[3px] flex items-center justify-center gap-2"
               >
                 <ClipboardList className="h-4 w-4" /> Add to Request

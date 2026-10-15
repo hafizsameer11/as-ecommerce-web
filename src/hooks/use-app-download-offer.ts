@@ -16,6 +16,10 @@ export function useAppDownloadOffer() {
   }, []);
 
   useEffect(() => {
+    void store.hydrate();
+  }, [store.hydrate]);
+
+  useEffect(() => {
     if (!mounted) return;
     const onOpen = () => {
       window.dispatchEvent(new CustomEvent("asl:app-offer-opened"));
@@ -27,6 +31,7 @@ export function useAppDownloadOffer() {
 
   useEffect(() => {
     if (!mounted) return;
+    if (store.offer && !store.offer.enabled) return;
     if (store.claimedAt) return;
     if (store.dismissedAt && Date.now() - store.dismissedAt < DISMISS_COOLDOWN_MS) return;
     const schedule = () => {
@@ -42,7 +47,7 @@ export function useAppDownloadOffer() {
       if (timerRef.current) window.clearTimeout(timerRef.current);
       window.removeEventListener("asl:cookie-consent-updated", schedule);
     };
-  }, [mounted, store.dismissedAt, store.claimedAt]);
+  }, [mounted, store.dismissedAt, store.claimedAt, store.offer]);
 
   const close = useCallback(() => {
     setOpen(false);
@@ -51,8 +56,16 @@ export function useAppDownloadOffer() {
 
   const claim = useCallback(() => {
     setOpen(false);
-    store.claim();
+    void store.claim();
   }, [store]);
 
-  return { mounted, open, close, claim, markInstalled: store.markInstalled };
+  return {
+    mounted,
+    open,
+    close,
+    claim,
+    markInstalled: store.markInstalled,
+    offer: store.offer,
+    claimResult: store.claimResult,
+  };
 }

@@ -10,6 +10,12 @@ const SESSION_KEY = "asl-app-banner-dismissed";
 export function AppInstallBanner() {
   const [show, setShow] = useState(false);
   const claimedAt = useAppDownload((s) => s.claimedAt);
+  const hydrate = useAppDownload((s) => s.hydrate);
+  const offerPct = useAppDownload((s) => s.offer?.percent ?? 10);
+
+  useEffect(() => {
+    void hydrate();
+  }, [hydrate]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -62,7 +68,7 @@ export function AppInstallBanner() {
             </div>
             <div className="min-w-0 flex-1">
               <div className="truncate text-[13px] font-bold text-paper">ASL ORIGINALS — Shop Luxury</div>
-              <div className="truncate text-[11px] text-paper/60">Get our official app — 10% off your next order.</div>
+              <div className="truncate text-[11px] text-paper/60">Get our official app — {offerPct}% off your next order.</div>
             </div>
             <button
               onClick={openOffer}

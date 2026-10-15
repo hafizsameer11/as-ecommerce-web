@@ -90,6 +90,7 @@ import { Route as AccountOrdersIndexRouteImport } from './routes/account.orders.
 import { Route as AccountOrdersIdRouteImport } from './routes/account.orders.$id'
 import { Route as AccountPaymentMethodsIndexRouteImport } from './routes/account.payment-methods.index'
 import { Route as AccountPaymentMethodsNewRouteImport } from './routes/account.payment-methods.new'
+import { Route as AccountRequestsIdRouteImport } from './routes/account.requests.$id'
 import { Route as AccountReturnsIndexRouteImport } from './routes/account.returns.index'
 import { Route as AccountReturnsDetailsRouteImport } from './routes/account.returns.details'
 import { Route as AccountReturnsHowItWorksRouteImport } from './routes/account.returns.how-it-works'
@@ -519,6 +520,11 @@ const AccountPaymentMethodsNewRoute =
     path: '/new',
     getParentRoute: () => AccountPaymentMethodsRoute,
   } as any)
+const AccountRequestsIdRoute = AccountRequestsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AccountRequestsRoute,
+} as any)
 const AccountReturnsIndexRoute = AccountReturnsIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -613,7 +619,7 @@ export interface FileRoutesByFullPath {
   '/account/orders': typeof AccountOrdersRouteWithChildren
   '/account/payment-methods': typeof AccountPaymentMethodsRouteWithChildren
   '/account/referrals': typeof AccountReferralsRoute
-  '/account/requests': typeof AccountRequestsRoute
+  '/account/requests': typeof AccountRequestsRouteWithChildren
   '/account/returns': typeof AccountReturnsRouteWithChildren
   '/account/rewards': typeof AccountRewardsRouteWithChildren
   '/account/security': typeof AccountSecurityRoute
@@ -658,6 +664,7 @@ export interface FileRoutesByFullPath {
   '/account/notifications/settings': typeof AccountNotificationsSettingsRoute
   '/account/orders/$id': typeof AccountOrdersIdRoute
   '/account/payment-methods/new': typeof AccountPaymentMethodsNewRoute
+  '/account/requests/$id': typeof AccountRequestsIdRoute
   '/account/returns/details': typeof AccountReturnsDetailsRoute
   '/account/returns/how-it-works': typeof AccountReturnsHowItWorksRoute
   '/account/returns/policy': typeof AccountReturnsPolicyRoute
@@ -700,7 +707,7 @@ export interface FileRoutesByTo {
   '/account/details': typeof AccountDetailsRoute
   '/account/feedback': typeof AccountFeedbackRoute
   '/account/referrals': typeof AccountReferralsRoute
-  '/account/requests': typeof AccountRequestsRoute
+  '/account/requests': typeof AccountRequestsRouteWithChildren
   '/account/security': typeof AccountSecurityRoute
   '/account/settings': typeof AccountSettingsRoute
   '/account/track': typeof AccountTrackRoute
@@ -742,6 +749,7 @@ export interface FileRoutesByTo {
   '/account/notifications/settings': typeof AccountNotificationsSettingsRoute
   '/account/orders/$id': typeof AccountOrdersIdRoute
   '/account/payment-methods/new': typeof AccountPaymentMethodsNewRoute
+  '/account/requests/$id': typeof AccountRequestsIdRoute
   '/account/returns/details': typeof AccountReturnsDetailsRoute
   '/account/returns/how-it-works': typeof AccountReturnsHowItWorksRoute
   '/account/returns/policy': typeof AccountReturnsPolicyRoute
@@ -793,7 +801,7 @@ export interface FileRoutesById {
   '/account/orders': typeof AccountOrdersRouteWithChildren
   '/account/payment-methods': typeof AccountPaymentMethodsRouteWithChildren
   '/account/referrals': typeof AccountReferralsRoute
-  '/account/requests': typeof AccountRequestsRoute
+  '/account/requests': typeof AccountRequestsRouteWithChildren
   '/account/returns': typeof AccountReturnsRouteWithChildren
   '/account/rewards': typeof AccountRewardsRouteWithChildren
   '/account/security': typeof AccountSecurityRoute
@@ -838,6 +846,7 @@ export interface FileRoutesById {
   '/account/notifications/settings': typeof AccountNotificationsSettingsRoute
   '/account/orders/$id': typeof AccountOrdersIdRoute
   '/account/payment-methods/new': typeof AccountPaymentMethodsNewRoute
+  '/account/requests/$id': typeof AccountRequestsIdRoute
   '/account/returns/details': typeof AccountReturnsDetailsRoute
   '/account/returns/how-it-works': typeof AccountReturnsHowItWorksRoute
   '/account/returns/policy': typeof AccountReturnsPolicyRoute
@@ -935,6 +944,7 @@ export interface FileRouteTypes {
     | '/account/notifications/settings'
     | '/account/orders/$id'
     | '/account/payment-methods/new'
+    | '/account/requests/$id'
     | '/account/returns/details'
     | '/account/returns/how-it-works'
     | '/account/returns/policy'
@@ -1019,6 +1029,7 @@ export interface FileRouteTypes {
     | '/account/notifications/settings'
     | '/account/orders/$id'
     | '/account/payment-methods/new'
+    | '/account/requests/$id'
     | '/account/returns/details'
     | '/account/returns/how-it-works'
     | '/account/returns/policy'
@@ -1114,6 +1125,7 @@ export interface FileRouteTypes {
     | '/account/notifications/settings'
     | '/account/orders/$id'
     | '/account/payment-methods/new'
+    | '/account/requests/$id'
     | '/account/returns/details'
     | '/account/returns/how-it-works'
     | '/account/returns/policy'
@@ -1734,6 +1746,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AccountPaymentMethodsNewRouteImport
       parentRoute: typeof AccountPaymentMethodsRoute
     }
+    '/account/requests/$id': {
+      id: '/account/requests/$id'
+      path: '/$id'
+      fullPath: '/account/requests/$id'
+      preLoaderRoute: typeof AccountRequestsIdRouteImport
+      parentRoute: typeof AccountRequestsRoute
+    }
     '/account/returns/': {
       id: '/account/returns/'
       path: '/'
@@ -1892,6 +1911,18 @@ const AccountPaymentMethodsRouteWithChildren =
     AccountPaymentMethodsRouteChildren,
   )
 
+interface AccountRequestsRouteChildren {
+  AccountRequestsIdRoute: typeof AccountRequestsIdRoute
+}
+
+const AccountRequestsRouteChildren: AccountRequestsRouteChildren = {
+  AccountRequestsIdRoute: AccountRequestsIdRoute,
+}
+
+const AccountRequestsRouteWithChildren = AccountRequestsRoute._addFileChildren(
+  AccountRequestsRouteChildren,
+)
+
 interface AccountReturnsRouteChildren {
   AccountReturnsDetailsRoute: typeof AccountReturnsDetailsRoute
   AccountReturnsHowItWorksRoute: typeof AccountReturnsHowItWorksRoute
@@ -1952,7 +1983,7 @@ interface AccountRouteChildren {
   AccountOrdersRoute: typeof AccountOrdersRouteWithChildren
   AccountPaymentMethodsRoute: typeof AccountPaymentMethodsRouteWithChildren
   AccountReferralsRoute: typeof AccountReferralsRoute
-  AccountRequestsRoute: typeof AccountRequestsRoute
+  AccountRequestsRoute: typeof AccountRequestsRouteWithChildren
   AccountReturnsRoute: typeof AccountReturnsRouteWithChildren
   AccountRewardsRoute: typeof AccountRewardsRouteWithChildren
   AccountSecurityRoute: typeof AccountSecurityRoute
@@ -1975,7 +2006,7 @@ const AccountRouteChildren: AccountRouteChildren = {
   AccountOrdersRoute: AccountOrdersRouteWithChildren,
   AccountPaymentMethodsRoute: AccountPaymentMethodsRouteWithChildren,
   AccountReferralsRoute: AccountReferralsRoute,
-  AccountRequestsRoute: AccountRequestsRoute,
+  AccountRequestsRoute: AccountRequestsRouteWithChildren,
   AccountReturnsRoute: AccountReturnsRouteWithChildren,
   AccountRewardsRoute: AccountRewardsRouteWithChildren,
   AccountSecurityRoute: AccountSecurityRoute,

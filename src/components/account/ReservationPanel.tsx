@@ -6,6 +6,7 @@ import { countdownParts, formatDropDate } from "@/lib/coming-soon";
 import { useOrders, type PlacedOrder } from "@/lib/orders-store";
 import { useReservations } from "@/lib/reservations-store";
 import { openPaymentAndVerify } from "@/lib/open-payment";
+import { defaultDepositPct } from "@/lib/public-settings-format";
 import { buttonTap } from "@/lib/motion";
 
 const NGN = new Intl.NumberFormat("en-NG");
@@ -79,7 +80,7 @@ export function ReservationPanel({ order }: { order: PlacedOrder }) {
   const depositPct =
     r.depositPct ??
     linkedReservation?.depositPct ??
-    (r.retail > 0 ? Math.round((r.deposit / r.retail) * 100) : 50);
+    (r.retail > 0 ? Math.round((r.deposit / r.retail) * 100) : defaultDepositPct(undefined));
   const reservationApiId = r.reservationApiId ?? linkedReservation?.apiId;
   const released = now !== null && countdownParts(r.releaseAt, now).released;
   const paidTotal = r.deposit + (balancePaid ? r.balance : 0);

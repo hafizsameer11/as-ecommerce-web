@@ -6,6 +6,8 @@ import { CheckoutPage } from "@/components/checkout/CheckoutPage";
 import { naira } from "@/components/checkout/checkoutData";
 import { useCheckout, shippingFor } from "@/lib/checkout-store";
 import { useAuthGuard } from "@/hooks/use-auth-guard";
+import { usePublicSettings } from "@/lib/api/settings";
+import { deliveryEtaSummary, deliveryRatesNaira } from "@/lib/public-settings-format";
 
 export const Route = createFileRoute("/checkout/information")({
   head: () => ({ meta: [{ title: "Checkout: Information - ASL ORIGINALS" }] }),
@@ -68,6 +70,9 @@ function SelectField({ label, value, onChange, options, error }: { label: string
 
 function InformationPage() {
   const ok = useAuthGuard();
+  const { data: publicSettings } = usePublicSettings();
+  const deliveryRows = deliveryRatesNaira(publicSettings);
+  const deliveryEta = deliveryEtaSummary(publicSettings);
   const navigate = useNavigate();
   const contact = useCheckout((s) => s.contact);
   const address = useCheckout((s) => s.address);
@@ -176,18 +181,14 @@ function InformationPage() {
                   </div>
                   <p className="text-[12px] text-muted-foreground mt-1">Flat delivery rates to ensure fast and reliable service.</p>
                   <div className="grid grid-cols-3 gap-3 mt-3">
-                    {[
-                      { city: "Lagos", fee: 4000 },
-                      { city: "Abuja", fee: 5000 },
-                      { city: "Other States", fee: 6000 },
-                    ].map((c) => (
-                       <div key={c.city} className="bg-background border border-border rounded-md p-2.5">
-                        <div className="text-[11px] text-muted-foreground">{c.city}</div>
-                        <div className="text-[14px] font-bold">{naira(c.fee)}</div>
+                    {deliveryRows.map((c) => (
+                       <div key={c.label} className="bg-background border border-border rounded-md p-2.5">
+                        <div className="text-[11px] text-muted-foreground">{c.label}</div>
+                        <div className="text-[14px] font-bold">{naira(c.feeNaira)}</div>
                       </div>
                     ))}
                   </div>
-                  <p className="text-[11px] text-muted-foreground mt-3">Delivery time: 2 - 5 working days</p>
+                  <p className="text-[11px] text-muted-foreground mt-3">Delivery time: {deliveryEta}</p>
                 </div>
               ) : (
                 <div className="rounded-md bg-muted/60 border border-border p-3 mt-2">

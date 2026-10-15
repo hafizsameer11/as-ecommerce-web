@@ -15,6 +15,8 @@ import {
   type OrderStatus,
 } from "./ordersData";
 import { useAllOrders, useOrders } from "@/lib/orders-store";
+import { accountApi } from "@/lib/api/account";
+import { downloadOrderInvoice } from "@/lib/order-actions";
 
 export function DesktopOrders() {
   const nav = useNavigate();
@@ -169,10 +171,32 @@ export function DesktopOrders() {
                         Return / Exchange
                       </button>
                     )}
-                    <button onClick={() => toast("Reordered")} className="text-[11px] font-semibold px-3 py-1.5 rounded-md border border-border hover:bg-muted">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const apiId = o.apiId ?? o.id;
+                        void accountApi
+                          .reorder(apiId)
+                          .then(() => {
+                            toast.success("Items added to your bag");
+                            nav({ to: "/cart" });
+                          })
+                          .catch((err) => toast.error(err instanceof Error ? err.message : "Could not reorder"));
+                      }}
+                      className="text-[11px] font-semibold px-3 py-1.5 rounded-md border border-border hover:bg-muted"
+                    >
                       Buy Again
                     </button>
-                    <button onClick={() => toast("Invoice downloaded")} className="text-[11px] font-semibold px-3 py-1.5 rounded-md border border-border hover:bg-muted">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const apiId = o.apiId ?? o.id;
+                        void downloadOrderInvoice(apiId, `invoice-${o.id}.pdf`)
+                          .then(() => toast.success("Invoice downloaded"))
+                          .catch((err) => toast.error(err instanceof Error ? err.message : "Could not download invoice"));
+                      }}
+                      className="text-[11px] font-semibold px-3 py-1.5 rounded-md border border-border hover:bg-muted"
+                    >
                       Invoice
                     </button>
                   </div>

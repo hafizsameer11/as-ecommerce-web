@@ -205,6 +205,9 @@ export const commerceApi = {
       headers: cartHeaders(),
     }),
 
+  wishlist: () =>
+    apiRequest<{ items: unknown[]; count: number; onSaleCount?: number }>("/store/wishlist"),
+
   wishlistIds: () => apiRequest<string[]>("/store/wishlist/ids"),
 
   toggleWishlist: (productId: string, variation?: { size?: string; color?: string }) =>

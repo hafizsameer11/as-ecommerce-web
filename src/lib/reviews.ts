@@ -110,24 +110,6 @@ export const useUserReviews = create<UserReviewsState>()(
           });
           return { ok: true, message: res.message };
         } catch (err) {
-          // Optimistic local fallback when offline / unauthenticated
-          set((s) => {
-            const list = s.byProduct[r.productId] ?? [];
-            const entry: Review = {
-              id: `u-${r.productId}-${Date.now()}`,
-              author: r.author,
-              initials: initialsOf(r.author),
-              rating: r.rating,
-              title: r.title,
-              body: r.body,
-              date: new Date().toLocaleDateString("en-NG", { day: "numeric", month: "short", year: "numeric" }),
-              verified: r.verified ?? false,
-              helpful: 0,
-              size: r.size,
-              fit: r.fit,
-            };
-            return { byProduct: { ...s.byProduct, [r.productId]: [entry, ...list] } };
-          });
           return { ok: false, message: err instanceof Error ? err.message : "Could not submit review" };
         }
       },

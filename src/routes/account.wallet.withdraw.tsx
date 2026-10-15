@@ -4,6 +4,8 @@ import { Toaster, toast } from "sonner";
 import { AccountInnerScaffold } from "@/components/account/AccountInnerScaffold";
 import { useWallet } from "@/lib/wallet-store";
 import { accountApi, type ApiBankAccount } from "@/lib/api/account";
+import { usePublicSettings } from "@/lib/api/settings";
+import { walletMinWithdrawNaira } from "@/lib/public-settings-format";
 
 export const Route = createFileRoute("/account/wallet/withdraw")({
   head: () => ({
@@ -24,6 +26,8 @@ function bankLabel(b: ApiBankAccount) {
 
 function Withdraw() {
   const nav = useNavigate();
+  const { data: publicSettings } = usePublicSettings();
+  const minWithdraw = walletMinWithdrawNaira(publicSettings);
   const balance = useWallet((s) => s.balance);
   const withdraw = useWallet((s) => s.withdraw);
   const [amount, setAmount] = useState(Math.min(25000, balance || 25000));
@@ -56,7 +60,7 @@ function Withdraw() {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!bankId) return toast.error("Add a bank account before withdrawing");
-    if (amount < 1000) return toast.error("Minimum withdrawal is ₦1,000");
+    if (amount < minWithdraw) return toast.error(`Minimum withdrawal is ₦${NGN.format(minWithdraw)}`);
     if (amount > balance) return toast.error("Insufficient balance");
     if (busy) return;
     setBusy(true);

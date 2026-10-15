@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import { Toaster, toast } from "sonner";
@@ -18,6 +18,8 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth-store";
+import { storeAuthApi } from "@/lib/api/auth";
+import { cmsApi } from "@/lib/api/cms";
 
 export const Route = createFileRoute("/account/settings")({
   head: () => ({
@@ -41,8 +43,27 @@ function SettingsPage() {
   );
 }
 
-function Toggle({ label, desc, Icon, defaultOn = false }: { label: string; desc: string; Icon: LucideIcon; defaultOn?: boolean }) {
-  const [on, setOn] = useState(defaultOn);
+function Toggle({
+  label,
+  desc,
+  Icon,
+  defaultOn = false,
+  on: controlledOn,
+  onChange,
+}: {
+  label: string;
+  desc: string;
+  Icon: LucideIcon;
+  defaultOn?: boolean;
+  on?: boolean;
+  onChange?: (v: boolean) => void;
+}) {
+  const [localOn, setLocalOn] = useState(defaultOn);
+  const on = controlledOn ?? localOn;
+  const setOn = (v: boolean) => {
+    if (onChange) onChange(v);
+    else setLocalOn(v);
+  };
   return (
     <div className="flex items-center gap-4 py-3.5 border-b border-border last:border-0">
       <Icon className="h-5 w-5 text-foreground shrink-0" strokeWidth={1.5} />
@@ -53,7 +74,7 @@ function Toggle({ label, desc, Icon, defaultOn = false }: { label: string; desc:
       <button
         role="switch"
         aria-checked={on}
-        onClick={() => { setOn(!on); }}
+        onClick={() => setOn(!on)}
         className={`relative inline-flex h-6 w-11 items-center rounded-full border transition-colors shrink-0 ${on ? "bg-ink border-ink" : "bg-muted border-border"}`}
         aria-label={label}
       >
@@ -64,6 +85,10 @@ function Toggle({ label, desc, Icon, defaultOn = false }: { label: string; desc:
     </div>
   );
 }
+
+const CURRENCY_OPTS = ["NGN (₦)", "USD ($)", "EUR (€)", "GBP (£)", "GHS (₵)", "KES (KSh)"];
+const currencyCode = (label: string) => label.split(" ")[0] || "NGN";
+const currencyLabel = (code?: string) => CURRENCY_OPTS.find((o) => o.startsWith(code || "NGN")) || "NGN (₦)";
 
 function Row({ label, desc, Icon, value, onClick, danger }: { label: string; desc: string; Icon: LucideIcon; value?: string; onClick?: () => void; danger?: boolean }) {
   return (
@@ -106,13 +131,66 @@ function Body() {
   const [analytics, setAnalytics] = useState(true);
   const [personalize, setPersonalize] = useState(true);
   const [marketing, setMarketing] = useState(false);
+  const [notifPush, setNotifPush] = useState(true);
+  const [notifEmail, setNotifEmail] = useState(true);
+  const [notifSms, setNotifSms] = useState(false);
+
+  useEffect(() => {
+    void storeAuthApi
+      .me()
+      .then((me) => {
+        setLang(me.preferences?.language || "English");
+        setCurrency(currencyLabel(me.preferences?.currency));
+        setAnalytics(me.preferences?.privacy?.analytics ?? true);
+        setPersonalize(me.preferences?.privacy?.personalization ?? true);
+        setMarketing(me.preferences?.privacy?.marketingCookies ?? false);
+      })
+      .catch(() => {});
+    void cmsApi
+      .notificationPreferences()
+      .then((prefs) => {
+        setNotifPush(prefs.channels.push);
+        setNotifEmail(prefs.channels.email);
+        setNotifSms(prefs.channels.sms);
+      })
+      .catch(() => {});
+  }, []);
+
+  const savePrefs = async (patch: {
+    language?: string;
+    currency?: string;
+    privacy?: { analytics: boolean; personalization: boolean; marketingCookies: boolean };
+  }) => {
+    try {
+      await storeAuthApi.updatePreferences({
+        language: patch.language,
+        currency: patch.currency ? currencyCode(patch.currency) : undefined,
+        privacy: patch.privacy,
+      });
+      toast.success("Preferences saved");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not save preferences");
+    }
+  };
+
+  const toggleNotif = async (key: "push" | "email" | "sms", next: boolean) => {
+    const setters = { push: setNotifPush, email: setNotifEmail, sms: setNotifSms };
+    const prev = { push: notifPush, email: notifEmail, sms: notifSms };
+    setters[key](next);
+    try {
+      await cmsApi.updateNotificationPreferences({ channels: { [key]: next } });
+    } catch (err) {
+      setters[key](prev[key]);
+      toast.error(err instanceof Error ? err.message : "Could not update notification preference");
+    }
+  };
 
   return (
     <div className="space-y-6">
       <Section title="Notifications">
-        <Toggle label="Push Notifications" desc="Order updates, offers, and news" Icon={Bell} defaultOn />
-        <Toggle label="Email Notifications" desc="Weekly newsletter and promotions" Icon={Mail} defaultOn />
-        <Toggle label="SMS Notifications" desc="Delivery and order status updates" Icon={MessageSquare} />
+        <Toggle label="Push Notifications" desc="Order updates, offers, and news" Icon={Bell} on={notifPush} onChange={(v) => void toggleNotif("push", v)} />
+        <Toggle label="Email Notifications" desc="Weekly newsletter and promotions" Icon={Mail} on={notifEmail} onChange={(v) => void toggleNotif("email", v)} />
+        <Toggle label="SMS Notifications" desc="Delivery and order status updates" Icon={MessageSquare} on={notifSms} onChange={(v) => void toggleNotif("sms", v)} />
       </Section>
 
       <Section title="Preferences">
@@ -143,7 +221,7 @@ function Body() {
               {["English", "Français", "Español", "Português", "Yoruba", "Igbo", "Hausa"].map((l) => <SelectItem key={l} value={l}>{l}</SelectItem>)}
             </SelectContent>
           </Select>
-          <DialogFooter><Button onClick={() => { setLangOpen(false); toast.success(`Language set to ${lang}`); }}>Save</Button></DialogFooter>
+          <DialogFooter><Button onClick={() => { setLangOpen(false); void savePrefs({ language: lang }); }}>Save</Button></DialogFooter>
         </DialogContent>
       </Dialog>
 
@@ -157,7 +235,7 @@ function Body() {
               {["NGN (₦)", "USD ($)", "EUR (€)", "GBP (£)", "GHS (₵)", "KES (KSh)"].map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
             </SelectContent>
           </Select>
-          <DialogFooter><Button onClick={() => { setCurrOpen(false); toast.success(`Currency set to ${currency}`); }}>Save</Button></DialogFooter>
+          <DialogFooter><Button onClick={() => { setCurrOpen(false); void savePrefs({ currency }); }}>Save</Button></DialogFooter>
         </DialogContent>
       </Dialog>
 
@@ -166,11 +244,11 @@ function Body() {
         <DialogContent>
           <DialogHeader><DialogTitle>Privacy Settings</DialogTitle><DialogDescription>Control how your data is used.</DialogDescription></DialogHeader>
           <div className="space-y-1">
-            <Toggle label="Analytics" desc="Help us improve with anonymous usage data" Icon={Eye} defaultOn={analytics} />
-            <Toggle label="Personalization" desc="Tailor recommendations to your taste" Icon={Eye} defaultOn={personalize} />
-            <Toggle label="Marketing Cookies" desc="Ads relevant to your interests" Icon={Eye} defaultOn={marketing} />
+            <Toggle label="Analytics" desc="Help us improve with anonymous usage data" Icon={Eye} on={analytics} onChange={setAnalytics} />
+            <Toggle label="Personalization" desc="Tailor recommendations to your taste" Icon={Eye} on={personalize} onChange={setPersonalize} />
+            <Toggle label="Marketing Cookies" desc="Ads relevant to your interests" Icon={Eye} on={marketing} onChange={setMarketing} />
           </div>
-          <DialogFooter><Button onClick={() => { setPrivOpen(false); toast.success("Privacy preferences saved"); }}>Done</Button></DialogFooter>
+          <DialogFooter><Button onClick={() => { setPrivOpen(false); void savePrefs({ privacy: { analytics, personalization: personalize, marketingCookies: marketing } }); }}>Done</Button></DialogFooter>
         </DialogContent>
       </Dialog>
 

@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { MessageSquare, Send, Lightbulb, Bug, Heart, Check } from "lucide-react";
 import { AccountInnerScaffold } from "@/components/account/AccountInnerScaffold";
 import { fadeInUp } from "@/lib/motion";
+import { cmsApi } from "@/lib/api/cms";
 
 export const Route = createFileRoute("/account/feedback")({
   head: () => ({
@@ -34,13 +35,27 @@ function Feedback() {
   const [message, setMessage] = useState("");
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (message.trim().length < 10) return toast.error("Please add a little more detail");
-    setSent(true);
-    setMessage("");
-    toast.success("Feedback sent - thank you");
+    setSubmitting(true);
+    try {
+      await cmsApi.feedback({
+        type: type as "idea" | "bug" | "praise",
+        area,
+        message: message.trim(),
+        email: email.trim() || undefined,
+      });
+      setSent(true);
+      setMessage("");
+      toast.success("Feedback sent - thank you");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not send feedback");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (sent) {
@@ -134,7 +149,8 @@ function Feedback() {
 
           <button
             type="submit"
-            className="w-full h-12 rounded-md bg-ink text-white font-semibold text-[13px] tracking-[0.08em] uppercase hover:bg-ink/90 inline-flex items-center justify-center gap-2"
+            disabled={submitting}
+            className="w-full h-12 rounded-md bg-ink text-white font-semibold text-[13px] tracking-[0.08em] uppercase hover:bg-ink/90 inline-flex items-center justify-center gap-2 disabled:opacity-60"
           >
             <Send className="h-4 w-4" /> Send Feedback
           </button>

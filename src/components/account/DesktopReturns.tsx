@@ -4,7 +4,8 @@ import { Link } from "@tanstack/react-router";
 import { ChevronRight, RotateCcw, Package, FileText, Clock, ShieldCheck, CheckCircle2 } from "lucide-react";
 import { DesktopShell } from "@/components/shell/DesktopShell";
 import { AccountSidebar } from "./AccountSidebar";
-import { useReturns, returnStats, returnStatusStyle, ReturnStatus } from "./returnsData";
+import { useReturns, returnStatsFromSettings, returnStatusStyle, ReturnStatus } from "./returnsData";
+import { usePublicSettings } from "@/lib/api/settings";
 import { fadeInUp, staggerContainer, staggerItem } from "@/lib/motion";
 
 const statLink: Record<string, string> = {
@@ -22,6 +23,8 @@ const tabs: { id: "all" | ReturnStatus; label: string }[] = [
 ];
 
 export function DesktopReturns() {
+  const { data: publicSettings } = usePublicSettings();
+  const returnStats = returnStatsFromSettings(publicSettings);
   const returnRequests = useReturns((s) => s.returnRequests);
   const hydrate = useReturns((s) => s.hydrate);
   useEffect(() => {

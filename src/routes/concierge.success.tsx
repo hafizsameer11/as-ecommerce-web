@@ -39,6 +39,7 @@ function ConciergeSuccessPage() {
   const conciergeSubtotal = () => summary.subtotal;
   const conciergeTotal = () => summary.estimatedTotal;
   const [requestId, setRequestId] = useState(remembered?.number || remembered?.requestId || "—");
+  const [verifyLabel, setVerifyLabel] = useState("Verifying payment…");
   const [paidAt] = useState(() => new Date());
 
   useEffect(() => {
@@ -46,7 +47,9 @@ function ConciergeSuccessPage() {
     void verifyConciergeReturn(ref).then((res) => {
       if (res?.order?.number) setRequestId(res.order.number);
       else if (remembered?.number) setRequestId(remembered.number);
-    });
+      const status = (res as { payment?: { status?: string } } | null)?.payment?.status;
+      setVerifyLabel(status ? `Payment ${status}` : ref ? "Payment verified" : "Payment recorded");
+    }).catch(() => setVerifyLabel("Payment pending verification"));
   }, [reference, trxref, remembered?.reference, remembered?.number]);
 
   return (
@@ -88,7 +91,7 @@ function ConciergeSuccessPage() {
                 <div>
                   <div className="text-[11px] text-muted-foreground">Payment Method</div>
                   <div className="text-[13px] font-semibold">Paystack</div>
-                  <div className="text-[10px] text-muted-foreground">{remembered?.reference ? `Ref ${remembered.reference}` : "Verified"}</div>
+                  <div className="text-[10px] text-muted-foreground">{remembered?.reference ? `Ref ${remembered.reference} · ${verifyLabel}` : verifyLabel}</div>
                 </div>
               </div>
             </div>

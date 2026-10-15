@@ -1,7 +1,15 @@
 import { useConciergeCart } from "@/lib/concierge-requests";
-import { loyaltyApi } from "@/lib/api/loyalty";
+import { loyaltyApi, koboToNaira, type ApiConciergeRequest } from "@/lib/api/loyalty";
 import { commerceApi } from "@/lib/api/commerce";
 import { apiBaseUrl } from "@/lib/api/client";
+
+function isPayableItem(i: ApiConciergeRequest) {
+  const key = (i.statusKey || "").toLowerCase();
+  return (
+    Boolean(i.quote) &&
+    (key === "quoted" || key === "payment_pending" || key === "approved" || i.cartStatus === "Payment Pending" || i.cartStatus === "Ready to Purchase")
+  );
+}
 
 const LAST_PAY_KEY = "asl-concierge-last-pay";
 
@@ -37,6 +45,7 @@ export function readConciergePayment(): {
 
 /** Accept the first payable quote in cart and open MockPaymentProvider authorizationUrl. */
 export async function payConciergeCart(opts: {
+  requestId?: string;
   address: {
     fullName: string;
     phone: string;
@@ -51,30 +60,43 @@ export async function payConciergeCart(opts: {
   returnUrl?: string;
 }): Promise<{ ok: boolean; message?: string }> {
   const cart = await loyaltyApi.conciergeCart();
-  const payable = (cart.items ?? []).find((i) => {
-    const key = (i.statusKey || "").toLowerCase();
-    return Boolean(i.quote) && (key === "quoted" || key === "payment_pending" || i.cartStatus === "Payment Pending" || i.cartStatus === "Ready to Purchase");
-  });
+  const items = cart.items ?? [];
+  const payable = opts.requestId
+    ? items.find((i) => i.id === opts.requestId && isPayableItem(i))
+    : items.find(isPayableItem);
   if (!payable) {
     return { ok: false, message: "No payable quote in your concierge cart yet." };
   }
 
+  const dueKobo =
+    payable.quote?.amountDue ??
+    payable.quote?.deposit ??
+    (payable.statusKey === "approved" ? payable.quote?.amountDue : undefined) ??
+    payable.price ??
+    payable.quote?.total ??
+    0;
+
   const returnUrl =
     opts.returnUrl ||
-    (typeof window !== "undefined" ? `${window.location.origin}/concierge/success` : undefined);
+    (typeof window !== "undefined"
+      ? `${window.location.origin}/concierge/success${opts.requestId ? `?requestId=${encodeURIComponent(opts.requestId)}` : ""}`
+      : undefined);
 
-  const res = await loyaltyApi.acceptConciergeQuote(payable.id, {
-    address: opts.address,
-    method: opts.method ?? "card",
-    returnUrl,
-  });
+  const res =
+    payable.statusKey === "approved" && (payable.quote?.amountDue ?? 0) > 0
+      ? await loyaltyApi.payConciergeBalance(payable.id, { method: opts.method ?? "card", returnUrl })
+      : await loyaltyApi.acceptConciergeQuote(payable.id, {
+          address: opts.address,
+          method: opts.method ?? "card",
+          returnUrl,
+        });
 
-  const payment = res.payment;
+  const payment = "payment" in res ? res.payment : null;
   rememberConciergePayment({
     requestId: payable.id,
     number: payable.number,
     reference: payment?.reference,
-    total: payable.quote?.total ?? payable.price ?? undefined,
+    total: dueKobo ? koboToNaira(dueKobo) : undefined,
   });
 
   if (payment?.authorizationUrl) {

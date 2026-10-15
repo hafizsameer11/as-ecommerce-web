@@ -131,7 +131,7 @@ export function DropReserveBlock({
           <span className="font-semibold text-ink">{formatNaira(product.price)}</span>
         </div>
         <div className="mt-2 flex items-center justify-between">
-          <span className="text-muted-foreground">Deposit due today (50%)</span>
+          <span className="text-muted-foreground">Deposit due today ({drop.depositPct}%)</span>
           <span className="font-semibold text-ink">{formatNaira(deposit)}</span>
         </div>
         <div className="mt-2 flex items-center justify-between border-t border-border pt-2">
@@ -148,7 +148,7 @@ export function DropReserveBlock({
           className="mt-0.5 h-4 w-4 shrink-0 accent-black"
         />
         <span>
-          I understand the 50% deposit secures my allocation and the balance becomes payable when the piece
+          I understand the {drop.depositPct}% deposit secures my allocation and the balance becomes payable when the piece
           drops. Deposits are refundable up to 48 hours before release.
         </span>
       </label>
