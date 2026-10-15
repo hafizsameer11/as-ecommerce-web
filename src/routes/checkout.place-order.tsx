@@ -4,11 +4,11 @@ import { toast, Toaster } from "sonner";
 import { Mail, Phone, Bell, Truck, Building2, MapPin, Tag, Lock, ArrowLeft, ShieldCheck, Edit3 } from "lucide-react";
 import { CheckoutPage } from "@/components/checkout/CheckoutPage";
 import { naira } from "@/components/checkout/checkoutData";
-import { useCheckout, shippingFor } from "@/lib/checkout-store";
+import { useCheckout, shippingFor, checkoutTotalFallback } from "@/lib/checkout-store";
 import { useCart, useCartSubtotal } from "@/lib/cart-store";
-import { useOrders } from "@/lib/orders-store";
-import { commerceApi, koboToNaira } from "@/lib/api/commerce";
+import { commerceApi } from "@/lib/api/commerce";
 import { apiBaseUrl } from "@/lib/api/client";
+import { saveCheckoutPending } from "@/lib/checkout-pending";
 
 export const Route = createFileRoute("/checkout/place-order")({
   head: () => ({ meta: [{ title: "Checkout: Place Order - ASL ORIGINALS" }] }),
@@ -35,12 +35,23 @@ const PAYMENT_LABEL: Record<string, string> = {
 
 function PlaceOrderPage() {
   const navigate = useNavigate();
-  const { contact, address, delivery, payment, coupon, discountPct, discountAmount, syncSession } = useCheckout();
+  const {
+    contact,
+    address,
+    delivery,
+    payment,
+    coupon,
+    discountPct,
+    discountAmount,
+    syncSession,
+    getPlaceOrderIdempotencyKey,
+    clearPlaceOrderIdempotencyKey,
+  } = useCheckout();
   const items = useCart((s) => s.items);
   const subtotal = useCartSubtotal();
   const discount = discountAmount > 0 ? Math.round(discountAmount) : Math.round(subtotal * (discountPct / 100));
   const shipping = shippingFor(delivery, address.state);
-  const recordPlacedOrder = useOrders((s) => s.recordPlacedOrder);
+  const displayTotal = checkoutTotalFallback(subtotal, discount, shipping);
   const [busy, setBusy] = useState(false);
 
   const place = async () => {
@@ -63,29 +74,26 @@ function PlaceOrderPage() {
       const result = await commerceApi.placeOrder({
         returnUrl,
         expectedTotal,
+        idempotencyKey: getPlaceOrderIdempotencyKey(),
       });
 
-      const totalNaira =
-        expectedTotal != null
-          ? koboToNaira(expectedTotal)
-          : subtotal - discount + shipping;
-
-      const order = recordPlacedOrder({
-        id: result.order.number,
-        items,
-        subtotal,
-        discount,
-        couponCode: coupon,
-        shipping,
-        address,
-        contact,
-        delivery,
-        payment,
-        total: result.order.total != null ? koboToNaira(result.order.total) : totalNaira,
+      saveCheckoutPending({
+        orderNumber: result.order.number,
+        orderId: result.order.id,
+        accessToken: result.order.accessToken,
+        paymentReference: result.payment?.reference,
       });
 
       // Cart is converted server-side; clear local bag without another DELETE.
       useCart.setState({ items: [] });
+      clearPlaceOrderIdempotencyKey();
+
+      const confirmSearch = {
+        id: result.order.number,
+        orderId: result.order.id,
+        token: result.order.accessToken ?? "",
+        reference: result.payment?.reference ?? "",
+      };
 
       if (result.payment?.authorizationUrl) {
         const payUrl = result.payment.authorizationUrl.startsWith("http")
@@ -97,7 +105,7 @@ function PlaceOrderPage() {
       }
 
       toast.success("Order placed!");
-      setTimeout(() => navigate({ to: "/checkout/confirmation", search: { id: order.id } }), 350);
+      setTimeout(() => navigate({ to: "/checkout/confirmation", search: confirmSearch }), 350);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Could not place order");
     } finally {
@@ -175,7 +183,7 @@ function PlaceOrderPage() {
               disabled={busy}
               className="flex-1 md:flex-none md:min-w-[320px] bg-ink text-white py-3.5 rounded-md text-sm font-semibold hover:opacity-90 flex items-center justify-center gap-2 disabled:opacity-60"
             >
-              <Lock className="h-4 w-4" /> {busy ? "Placing…" : `Place Order (${naira(subtotal - discount + shipping)})`}
+              <Lock className="h-4 w-4" /> {busy ? "Placing…" : `Place Order (${naira(displayTotal)})`}
             </button>
           </div>
           <p className="text-center text-[11px] text-muted-foreground">By placing your order, you agree to our <Link to="/customer-care/terms-of-service" className="underline">Terms of Service</Link> and <Link to="/customer-care/privacy-policy" className="underline">Privacy Policy</Link>.</p>

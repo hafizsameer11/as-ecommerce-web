@@ -135,6 +135,9 @@ function RootComponent() {
         import("@/lib/catalog-hydrate").then(({ hydrateShopCatalogFromApi }) =>
           hydrateShopCatalogFromApi().catch((err) => console.warn("[catalog]", err))
         ),
+        import("@/lib/public-settings-store").then(({ usePublicSettingsStore }) =>
+          usePublicSettingsStore.getState().hydrate()
+        ),
       ]);
       if (!cancelled) setBootstrapped(true);
     })();

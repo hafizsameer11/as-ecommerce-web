@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { Toaster, toast } from "sonner";
 import { Truck, Building2, MapPin, ArrowRight, Lock, ArrowLeft, AlertCircle } from "lucide-react";
@@ -77,6 +77,10 @@ function InformationPage() {
   const setMethod = useCheckout((s) => s.setDelivery);
   const syncSession = useCheckout((s) => s.syncSession);
   const [submitted, setSubmitted] = useState(false);
+
+  useEffect(() => {
+    void syncSession();
+  }, [syncSession]);
 
   const errors: Record<string, string> = {};
   if (!contact.email.trim()) errors.email = "Please enter your email address.";

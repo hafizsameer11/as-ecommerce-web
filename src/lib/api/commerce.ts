@@ -183,11 +183,12 @@ export const commerceApi = {
       headers: cartHeaders(),
     }),
 
-  placeOrder: async (body: { returnUrl?: string; expectedTotal?: number } = {}) => {
-    const key = `po_${crypto.randomUUID()}`;
+  placeOrder: async (body: { returnUrl?: string; expectedTotal?: number; idempotencyKey?: string } = {}) => {
+    const { idempotencyKey, ...payload } = body;
+    const key = idempotencyKey ?? `po_${crypto.randomUUID()}`;
     return apiRequest<PlaceOrderResult>("/store/checkout/place-order", {
       method: "POST",
-      body,
+      body: payload,
       headers: cartHeaders(),
       idempotencyKey: key,
     });

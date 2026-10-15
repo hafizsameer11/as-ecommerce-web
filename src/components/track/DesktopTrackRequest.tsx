@@ -21,14 +21,18 @@ const nav = [
 
 const GOLD = "#cc5000";
 
-export function DesktopTrackRequest({ id }: { id?: string }) {
+export function DesktopTrackRequest({ id, email: emailParam }: { id?: string; email?: string }) {
   const navigate = useNavigate();
   const [inputId, setInputId] = useState(id || "");
+  const [inputEmail, setInputEmail] = useState(emailParam || "");
   const [showHelp, setShowHelp] = useState(false);
   const [tracked, setTracked] = useState<ReturnType<typeof trackToActive> | null>(null);
   const [notFound, setNotFound] = useState(false);
 
-  useEffect(() => { setInputId(id || ""); }, [id]);
+  useEffect(() => {
+    setInputId(id || "");
+    setInputEmail(emailParam || "");
+  }, [id, emailParam]);
 
   useEffect(() => {
     if (!id) {
@@ -37,7 +41,8 @@ export function DesktopTrackRequest({ id }: { id?: string }) {
       return;
     }
     let cancelled = false;
-    trackConciergeRequest(id).then((track) => {
+    const guestEmail = inputEmail.trim() || emailParam?.trim() || undefined;
+    trackConciergeRequest(id, guestEmail).then((track) => {
       if (cancelled) return;
       if (!track) {
         setTracked(null);
@@ -50,7 +55,7 @@ export function DesktopTrackRequest({ id }: { id?: string }) {
     return () => {
       cancelled = true;
     };
-  }, [id]);
+  }, [id, emailParam, inputEmail]);
 
   const active = tracked ?? {
     id: "",
@@ -137,11 +142,14 @@ export function DesktopTrackRequest({ id }: { id?: string }) {
                 <div className="flex items-center gap-3">
                   <input value={inputId} onChange={(e) => setInputId(e.target.value)} placeholder="Enter your Request ID (e.g. ASL123456)"
                     className="flex-1 bg-[#fafafa] border border-black/10 rounded px-4 py-3 text-[12.5px] outline-none focus:border-gold transition placeholder:text-muted-foreground/60" />
+                  <input value={inputEmail} onChange={(e) => setInputEmail(e.target.value)} type="email" autoComplete="email" placeholder="Email (guests)"
+                    className="flex-1 bg-[#fafafa] border border-black/10 rounded px-4 py-3 text-[12.5px] outline-none focus:border-gold transition placeholder:text-muted-foreground/60" />
                   <motion.button whileHover={{ scale: 1.02 }} whileTap="tap" variants={buttonTap}
                     onClick={() => {
                       const q = inputId.trim();
+                      const em = inputEmail.trim();
                       if (!q) return toast.error("Enter a request ID");
-                      if (q) navigate({ to: "/track-request", search: { id: q } });
+                      navigate({ to: "/track-request", search: { id: q, ...(em ? { email: em } : {}) } });
                       toast.success("Tracking " + q);
                     }}
                     className="bg-ink text-white px-7 py-3 text-[11px] font-semibold tracking-[0.2em] rounded shrink-0">

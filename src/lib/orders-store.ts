@@ -17,6 +17,8 @@ export type OrderReservation = {
   deposit: number;
   balance: number;
   releaseAt: string;
+  reservationApiId?: string;
+  depositPct?: number;
   balancePaid: boolean;
   balancePaidAt?: number;
 };
@@ -56,7 +58,6 @@ type State = {
   getById: (id: string) => PlacedOrder | undefined;
   updateStatus: (ids: string[], status: OrderStatus) => void;
   removeOrders: (ids: string[]) => void;
-  payBalance: (id: string) => void;
 };
 
 function reservationFrom(items: CartItem[]): OrderReservation | undefined {
@@ -76,6 +77,7 @@ function reservationFrom(items: CartItem[]): OrderReservation | undefined {
     deposit: depositFor(price),
     balance: balanceFor(price),
     releaseAt: drop.releaseAt,
+    depositPct: drop.depositPct,
     balancePaid: false,
   };
 }
@@ -224,14 +226,6 @@ export const useOrders = create<State>()(
           orders: s.orders.map((o) => (set2.has(o.id) || (o.apiId && set2.has(o.apiId)) ? { ...o, status } : o)),
         }));
       },
-      payBalance: (id) =>
-        set((s) => ({
-          orders: s.orders.map((o) =>
-            o.id === id && o.reservation
-              ? { ...o, reservation: { ...o.reservation, balancePaid: true, balancePaidAt: Date.now() } }
-              : o
-          ),
-        })),
       removeOrders: (ids) => {
         const set2 = new Set(ids);
         set((s) => ({ orders: s.orders.filter((o) => !set2.has(o.id)) }));

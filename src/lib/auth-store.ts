@@ -20,7 +20,10 @@ type AuthState = {
   loginMode: AuthMode;
   loginNext?: string;
   hydrated: boolean;
-  signIn: (email: string, password?: string) => Promise<AuthUser>;
+  twoFactorChallenge: string | null;
+  signIn: (email: string, password?: string) => Promise<AuthUser | null>;
+  completeTwoFactor: (code: string) => Promise<AuthUser>;
+  cancelTwoFactor: () => void;
   register: (data: { name: string; email: string; phone?: string; password?: string }) => Promise<AuthUser>;
   signOut: () => Promise<void>;
   completeOnboarding: () => void;
@@ -63,6 +66,23 @@ async function afterAuthMerge() {
   }
 }
 
+function applySession(
+  set: (p: Partial<AuthState>) => void,
+  get: () => AuthState,
+  customer: CustomerDto
+): AuthUser {
+  const user = toAuthUser(customer);
+  set({
+    user,
+    isLoggedIn: true,
+    twoFactorChallenge: null,
+    hasOnboarded: !!customer.hasOnboarded || get().hasOnboarded,
+    hydrated: true,
+  });
+  void afterAuthMerge();
+  return user;
+}
+
 export const useAuth = create<AuthState>()(
   persist(
     (set, get) => ({
@@ -73,28 +93,28 @@ export const useAuth = create<AuthState>()(
       loginMode: "signin",
       loginNext: undefined,
       hydrated: false,
+      twoFactorChallenge: null,
       signIn: async (email, password) => {
         if (!password) throw new ApiError(400, null, "Password is required");
         const res = await storeAuthApi.login(email, password);
-        if ((res as { twoFactorRequired?: boolean }).twoFactorRequired) {
-          throw new ApiError(401, null, "Two-factor authentication is required");
+        if (res.twoFactorRequired) {
+          if (!res.challenge) throw new ApiError(401, null, "Two-factor challenge missing");
+          set({ twoFactorChallenge: res.challenge });
+          return null;
         }
-        const user = toAuthUser(res.customer);
-        set({
-          user,
-          isLoggedIn: true,
-          hasOnboarded: !!res.customer.hasOnboarded || get().hasOnboarded,
-        });
-        void afterAuthMerge();
-        return user;
+        return applySession(set, get, res.customer);
       },
+      completeTwoFactor: async (code) => {
+        const challenge = get().twoFactorChallenge;
+        if (!challenge) throw new ApiError(400, null, "No sign-in in progress");
+        const res = await storeAuthApi.login2fa(challenge, code.trim());
+        return applySession(set, get, res.customer);
+      },
+      cancelTwoFactor: () => set({ twoFactorChallenge: null }),
       register: async ({ name, email, phone, password }) => {
         if (!password) throw new ApiError(400, null, "Password is required");
         const res = await storeAuthApi.register({ name, email, phone, password });
-        const user = toAuthUser(res.customer);
-        set({ user, isLoggedIn: true });
-        void afterAuthMerge();
-        return user;
+        return applySession(set, get, res.customer);
       },
       signOut: async () => {
         try {
@@ -102,25 +122,19 @@ export const useAuth = create<AuthState>()(
         } catch {
           /* still clear local session */
         }
-        set({ user: null, isLoggedIn: false });
+        set({ user: null, isLoggedIn: false, twoFactorChallenge: null });
       },
       completeOnboarding: () => set({ hasOnboarded: true }),
       openLogin: (mode = "signin", next) =>
-        set({ isLoginOpen: true, loginMode: mode, loginNext: next }),
-      closeLogin: () => set({ isLoginOpen: false }),
+        set({ isLoginOpen: true, loginMode: mode, loginNext: next, twoFactorChallenge: null }),
+      closeLogin: () => set({ isLoginOpen: false, twoFactorChallenge: null }),
       setLoginMode: (mode) => set({ loginMode: mode }),
       bootstrap: async () => {
         try {
           const me = await storeAuthApi.me();
-          set({
-            user: toAuthUser(me),
-            isLoggedIn: true,
-            hasOnboarded: !!me.hasOnboarded || get().hasOnboarded,
-            hydrated: true,
-          });
-          void afterAuthMerge();
+          applySession(set, get, me);
         } catch {
-          set({ user: null, isLoggedIn: false, hydrated: true });
+          set({ user: null, isLoggedIn: false, hydrated: true, twoFactorChallenge: null });
           void import("@/lib/cart-store").then(({ useCart }) => useCart.getState().refresh());
         }
       },
@@ -131,15 +145,13 @@ export const useAuth = create<AuthState>()(
     {
       name: "asl-auth",
       partialize: (s) => ({
-        user: s.user,
-        isLoggedIn: s.isLoggedIn,
         hasOnboarded: s.hasOnboarded,
       }),
     }
   )
 );
 
-export const useIsLoggedIn = () => useAuth((s) => s.isLoggedIn);
+export const useIsLoggedIn = () => useAuth((s) => s.hydrated && s.isLoggedIn);
 export const useCurrentUser = () => useAuth((s) => s.user);
 
 /** Display name for account chrome; falls back when profile is not loaded yet. */

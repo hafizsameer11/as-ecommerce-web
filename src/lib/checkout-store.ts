@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { commerceApi, koboToNaira } from "@/lib/api/commerce";
+import { commerceApi, koboToNaira, type CheckoutSnapshot } from "@/lib/api/commerce";
 
 export type DeliveryMethod = "ship" | "pickup";
 export type PaymentMethod = "paystack" | "bank" | "card";
@@ -30,6 +30,13 @@ type CheckoutState = {
   discountPct: number;
   discountAmount: number;
   shippingAmount: number;
+  subtotalAmount: number;
+  totalAmount: number;
+  shippingRateId: string | null;
+  pickupLocationId: string | null;
+  shippingOptions: unknown[];
+  pickupLocations: unknown[];
+  placeOrderIdempotencyKey: string | null;
   setContact: (patch: Partial<CheckoutContact>) => void;
   setAddress: (patch: Partial<CheckoutAddress>) => void;
   setDelivery: (m: DeliveryMethod) => void;
@@ -37,7 +44,40 @@ type CheckoutState = {
   applyCoupon: (code: string) => Promise<{ ok: boolean; pct: number; message: string }>;
   removeCoupon: () => void;
   syncSession: () => Promise<void>;
+  getPlaceOrderIdempotencyKey: () => string;
+  clearPlaceOrderIdempotencyKey: () => void;
 };
+
+function firstOptionId(list: unknown[] | undefined): string | null {
+  const row = list?.[0] as { id?: string } | undefined;
+  return row?.id ?? null;
+}
+
+function applySnapshot(
+  set: (partial: Partial<CheckoutState>) => void,
+  get: () => CheckoutState,
+  snap: CheckoutSnapshot
+) {
+  const patch: Partial<CheckoutState> = {
+    shippingOptions: snap.shippingOptions ?? get().shippingOptions,
+    pickupLocations: snap.pickupLocations ?? get().pickupLocations,
+  };
+  if (snap.session?.pickupLocationId) patch.pickupLocationId = snap.session.pickupLocationId;
+  if (snap.session?.shippingRateId) patch.shippingRateId = snap.session.shippingRateId;
+  if (snap.session?.couponCode !== undefined) {
+    patch.coupon = snap.session.couponCode ?? null;
+  }
+  if (snap.totals) {
+    const sub = snap.totals.subtotal || 0;
+    const disc = snap.totals.discount || 0;
+    patch.discountAmount = koboToNaira(disc);
+    patch.shippingAmount = koboToNaira(snap.totals.shipping ?? 0);
+    patch.subtotalAmount = koboToNaira(sub);
+    patch.totalAmount = koboToNaira(snap.totals.total ?? 0);
+    patch.discountPct = sub > 0 ? Math.round((disc / sub) * 100) : 0;
+  }
+  set(patch);
+}
 
 const initialContact: CheckoutContact = {
   email: "",
@@ -72,6 +112,13 @@ export const useCheckout = create<CheckoutState>()(
       discountPct: 0,
       discountAmount: 0,
       shippingAmount: 0,
+      subtotalAmount: 0,
+      totalAmount: 0,
+      shippingRateId: null,
+      pickupLocationId: null,
+      shippingOptions: [],
+      pickupLocations: [],
+      placeOrderIdempotencyKey: null,
       setContact: (patch) => set((s) => ({ contact: { ...s.contact, ...patch } })),
       setAddress: (patch) => set((s) => ({ address: { ...s.address, ...patch } })),
       setDelivery: (m) => set({ delivery: m }),
@@ -79,7 +126,22 @@ export const useCheckout = create<CheckoutState>()(
       syncSession: async () => {
         const s = get();
         try {
-          const snap = await commerceApi.patchCheckout({
+          let snap = await commerceApi.getCheckout();
+          applySnapshot(set, get, snap);
+
+          let pickupLocationId =
+            s.pickupLocationId ?? snap.session?.pickupLocationId ?? firstOptionId(snap.pickupLocations);
+          let shippingRateId =
+            s.shippingRateId ?? snap.session?.shippingRateId ?? firstOptionId(snap.shippingOptions);
+
+          if (s.delivery === "pickup" && !pickupLocationId) {
+            pickupLocationId = firstOptionId(get().pickupLocations);
+          }
+          if (s.delivery === "ship" && !shippingRateId) {
+            shippingRateId = firstOptionId(get().shippingOptions);
+          }
+
+          snap = await commerceApi.patchCheckout({
             contact: {
               email: s.contact.email,
               phone: s.contact.phone || undefined,
@@ -100,21 +162,24 @@ export const useCheckout = create<CheckoutState>()(
                   }
                 : undefined,
             paymentMethod: mapPayment(s.payment),
+            pickupLocationId: s.delivery === "pickup" ? pickupLocationId : null,
+            shippingRateId: s.delivery === "ship" ? shippingRateId : null,
           });
-          if (snap.totals) {
-            const sub = snap.totals.subtotal || 0;
-            const disc = snap.totals.discount || 0;
-            set({
-              discountAmount: koboToNaira(disc),
-              shippingAmount: koboToNaira(snap.totals.shipping || 0),
-              discountPct: sub > 0 ? Math.round((disc / sub) * 100) : 0,
-              coupon: snap.session?.couponCode ?? get().coupon,
-            });
-          }
+          applySnapshot(set, get, snap);
+          if (pickupLocationId) set({ pickupLocationId });
+          if (shippingRateId) set({ shippingRateId });
         } catch (err) {
           console.warn("[checkout] sync failed", err);
         }
       },
+      getPlaceOrderIdempotencyKey: () => {
+        const existing = get().placeOrderIdempotencyKey;
+        if (existing) return existing;
+        const key = `po_${crypto.randomUUID()}`;
+        set({ placeOrderIdempotencyKey: key });
+        return key;
+      },
+      clearPlaceOrderIdempotencyKey: () => set({ placeOrderIdempotencyKey: null }),
       applyCoupon: async (raw) => {
         const code = raw.trim().toUpperCase();
         if (!code) return { ok: false, pct: 0, message: "Enter a coupon code" };
@@ -124,11 +189,11 @@ export const useCheckout = create<CheckoutState>()(
           const disc = res.coupon?.discount ?? res.checkout?.totals?.discount ?? 0;
           const sub = res.checkout?.totals?.subtotal ?? 0;
           const pct = sub > 0 ? Math.round((disc / sub) * 100) : 0;
+          if (res.checkout) applySnapshot(set, get, res.checkout);
           set({
             coupon: res.coupon?.code ?? code,
             discountPct: pct,
             discountAmount: koboToNaira(disc),
-            shippingAmount: koboToNaira(res.checkout?.totals?.shipping ?? 0),
           });
           return { ok: true, pct, message: res.message || `${pct}% off applied` };
         } catch (err) {
@@ -149,18 +214,14 @@ export const useCheckout = create<CheckoutState>()(
   )
 );
 
-export const SHIP_FEE_BY_STATE: Record<string, number> = {
-  Lagos: 4000,
-  Abuja: 5000,
-  Other: 6000,
-};
-
-export function shippingFor(delivery: DeliveryMethod, state: string): number {
+/** Server checkout shipping (kobo→naira). Pickup is always 0. */
+export function shippingFor(delivery: DeliveryMethod, _state?: string): number {
   if (delivery === "pickup") return 0;
-  const fromApi = useCheckout.getState().shippingAmount;
+  return useCheckout.getState().shippingAmount;
+}
+
+export function checkoutTotalFallback(subtotal: number, discount: number, shipping: number): number {
+  const fromApi = useCheckout.getState().totalAmount;
   if (fromApi > 0) return fromApi;
-  if (state.toLowerCase().includes("lagos")) return SHIP_FEE_BY_STATE.Lagos;
-  if (state.toLowerCase().includes("abuja") || state.toLowerCase().includes("fct"))
-    return SHIP_FEE_BY_STATE.Abuja;
-  return SHIP_FEE_BY_STATE.Other;
+  return subtotal - discount + shipping;
 }

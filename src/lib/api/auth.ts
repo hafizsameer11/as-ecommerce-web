@@ -51,6 +51,12 @@ export const storeAuthApi = {
   login: (email: string, password: string) =>
     apiRequest<AuthSessionResponse>("/store/auth/login", { method: "POST", body: { email, password } }),
 
+  login2fa: (challenge: string, code: string) =>
+    apiRequest<AuthSessionResponse>("/store/auth/login/2fa", {
+      method: "POST",
+      body: { challenge, code },
+    }),
+
   register: (data: { name: string; email: string; phone?: string; password: string }) =>
     apiRequest<AuthSessionResponse>("/store/auth/register", {
       method: "POST",

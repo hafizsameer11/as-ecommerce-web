@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Toaster, toast } from "sonner";
 import { z } from "zod";
@@ -7,11 +7,18 @@ import { CheckCircle2, Copy, Calendar, CreditCard, Wallet, ShoppingBag, Package,
 import { useIsDesktop } from "@/hooks/use-breakpoint";
 import { DesktopShell } from "@/components/shell/DesktopShell";
 import { naira } from "@/components/checkout/checkoutData";
-import { useOrderById, useOrders } from "@/lib/orders-store";
 import wordmarkBlack from "@/assets/ASL_wordmark_black.png";
+import { readCheckoutPending, clearCheckoutPending } from "@/lib/checkout-pending";
+import {
+  confirmationPaymentCopy,
+  loadConfirmationOrder,
+  type ConfirmationOrder,
+} from "@/lib/confirmation-order";
 
 const searchSchema = z.object({
   id: fallback(z.string(), "").default(""),
+  orderId: fallback(z.string(), "").default(""),
+  token: fallback(z.string(), "").default(""),
   reference: fallback(z.string(), "").default(""),
   status: fallback(z.string(), "").default(""),
 });
@@ -31,21 +38,51 @@ const upsell = [
   { name: "Louis Vuitton Keepall Bandoulière 45", price: 1250000, image: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=300&q=80" },
 ];
 
-const steps = [
-  { Icon: CheckCircle2, label: "Complete", sub: "We've received your order.", done: true },
-  { Icon: Package, label: "Processing", sub: "We are preparing your items." },
-  { Icon: Truck, label: "On Its Way", sub: "Your order is on the way." },
-  { Icon: ShoppingBag, label: "Delivered", sub: "Enjoy your purchase!" },
-];
-
 function ConfirmationPage() {
   const [summaryOpen, setSummaryOpen] = useState(false);
+  const [order, setOrder] = useState<ConfirmationOrder | null>(null);
+  const [loading, setLoading] = useState(true);
   const isDesktop = useIsDesktop();
   const navigate = useNavigate();
-  const { id } = Route.useSearch();
-  const orderFromStore = useOrderById(id);
-  const latest = useOrders((s) => s.orders[0]);
-  const order = (id && orderFromStore) || latest || orderFromStore;
+  const { id, orderId, token, reference } = Route.useSearch();
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      const pending = readCheckoutPending();
+      const loaded = await loadConfirmationOrder({
+        orderNumber: id || pending?.orderNumber,
+        orderId: orderId || pending?.orderId,
+        accessToken: token || pending?.accessToken,
+        reference: reference || pending?.paymentReference,
+      });
+      if (!cancelled) {
+        setOrder(loaded);
+        setLoading(false);
+        if (loaded) clearCheckoutPending();
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [id, orderId, token, reference]);
+
+  const payCopy = confirmationPaymentCopy(order?.paymentStatus);
+  const steps = [
+    { Icon: CheckCircle2, label: "Complete", sub: "We've received your order.", done: payCopy.stepComplete },
+    { Icon: Package, label: "Processing", sub: "We are preparing your items." },
+    { Icon: Truck, label: "On Its Way", sub: "Your order is on the way." },
+    { Icon: ShoppingBag, label: "Delivered", sub: "Enjoy your purchase!" },
+  ];
+
+  if (loading) {
+    return (
+      <div className="min-h-screen grid place-items-center p-6 text-center">
+        <div className="text-sm text-muted-foreground">Loading your order…</div>
+      </div>
+    );
+  }
 
   if (!order) {
     return (
@@ -72,12 +109,10 @@ function ConfirmationPage() {
             </div>
             <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-foreground">
               <span className="h-1.5 w-1.5 rounded-full bg-ink" />
-              Complete
+              {payCopy.badge}
             </div>
-            <h1 className="mt-2 font-display text-xl md:text-2xl font-bold">Thank You, Your Order is Complete!</h1>
-            <p className="text-[13px] text-muted-foreground mt-2 max-w-md mx-auto">
-              We've received your order and it's now being processed. You will receive an email confirmation shortly.
-            </p>
+            <h1 className="mt-2 font-display text-xl md:text-2xl font-bold">{payCopy.title}</h1>
+            <p className="text-[13px] text-muted-foreground mt-2 max-w-md mx-auto">{payCopy.subtitle}</p>
           </div>
 
           <div className="rounded-md bg-ink border border-ink px-4 py-3 flex items-center justify-between">
@@ -108,7 +143,7 @@ function ConfirmationPage() {
             <div className="flex items-start gap-2 p-3 rounded-md border border-border bg-card">
               <Wallet className="h-4 w-4 mt-0.5 text-muted-foreground" />
               <div>
-                <div className="text-[11px] uppercase tracking-widest text-muted-foreground">Total Paid</div>
+                <div className="text-[11px] uppercase tracking-widest text-muted-foreground">{payCopy.amountLabel}</div>
                 <div className="text-[13px] font-semibold text-ink">{naira(total)}</div>
               </div>
             </div>

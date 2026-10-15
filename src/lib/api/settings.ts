@@ -1,13 +1,10 @@
-import { useQuery } from "@tanstack/react-query";
-import { storeSettingsApi } from "./auth";
+import { usePublicSettingsStore } from "@/lib/public-settings-store";
 
 export const publicSettingsQueryKey = ["store", "settings", "public"] as const;
 
-/** Prefetch/read public business rules from the API (do not hard-code fees in UI). */
+/** Read public business rules hydrated at app startup. */
 export function usePublicSettings() {
-  return useQuery({
-    queryKey: publicSettingsQueryKey,
-    queryFn: () => storeSettingsApi.public(),
-    staleTime: 5 * 60_000,
-  });
+  const settings = usePublicSettingsStore((s) => s.settings);
+  const hydrated = usePublicSettingsStore((s) => s.hydrated);
+  return { data: settings, isLoading: !hydrated, isSuccess: hydrated && settings != null };
 }

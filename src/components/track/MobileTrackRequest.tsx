@@ -21,14 +21,18 @@ const bottomTabs = [
   { id: "account", label: "Account", Icon: User },
 ];
 
-export function MobileTrackRequest({ id }: { id?: string }) {
+export function MobileTrackRequest({ id, email: emailParam }: { id?: string; email?: string }) {
   const navigate = useNavigate();
   const [inputId, setInputId] = useState(id || "");
+  const [inputEmail, setInputEmail] = useState(emailParam || "");
   const [showHelp, setShowHelp] = useState(false);
   const [active, setActive] = useState<ReturnType<typeof trackToActive> | null>(null);
   const [notFound, setNotFound] = useState(false);
 
-  useEffect(() => { setInputId(id || ""); }, [id]);
+  useEffect(() => {
+    setInputId(id || "");
+    setInputEmail(emailParam || "");
+  }, [id, emailParam]);
 
   useEffect(() => {
     if (!id) {
@@ -38,7 +42,8 @@ export function MobileTrackRequest({ id }: { id?: string }) {
     }
     let cancelled = false;
     setNotFound(false);
-    trackConciergeRequest(id).then((track) => {
+    const guestEmail = inputEmail.trim() || emailParam?.trim() || undefined;
+    trackConciergeRequest(id, guestEmail).then((track) => {
       if (cancelled) return;
       if (!track) {
         setActive(null);
@@ -50,7 +55,7 @@ export function MobileTrackRequest({ id }: { id?: string }) {
     return () => {
       cancelled = true;
     };
-  }, [id]);
+  }, [id, emailParam, inputEmail]);
 
   const display = active ?? {
     id: "",
@@ -120,11 +125,14 @@ export function MobileTrackRequest({ id }: { id?: string }) {
         <div className="rounded-xl bg-white border border-black/10 p-4 shadow-sm">
           <input value={inputId} onChange={(e) => setInputId(e.target.value)} placeholder="Enter your Request ID (e.g. ASL123456)"
             className="w-full bg-[#fafafa] border border-black/10 rounded px-4 py-3 text-[12.5px] outline-none focus:border-gold transition placeholder:text-muted-foreground/60" />
+          <input value={inputEmail} onChange={(e) => setInputEmail(e.target.value)} type="email" autoComplete="email" placeholder="Email (guests)"
+            className="mt-2 w-full bg-[#fafafa] border border-black/10 rounded px-4 py-3 text-[12.5px] outline-none focus:border-gold transition placeholder:text-muted-foreground/60" />
           <div className="mt-3 flex items-center gap-3">
             <motion.button whileTap="tap" variants={buttonTap} onClick={() => {
               const q = inputId.trim();
+              const em = inputEmail.trim();
               if (!q) return toast.error("Enter a request ID");
-              navigate({ to: "/track-request", search: { id: q } });
+              navigate({ to: "/track-request", search: { id: q, ...(em ? { email: em } : {}) } });
               toast.success("Tracking " + q);
             }}
               className="flex-1 bg-ink text-white py-3.5 text-[11.5px] font-semibold tracking-[0.22em] rounded">

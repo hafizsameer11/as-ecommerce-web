@@ -14,6 +14,8 @@ export type Reservation = {
   price: number;
   deposit: number;
   balance: number;
+  depositPct?: number;
+  balancePaid: boolean;
   releaseAt: string;
   createdAt: number;
   status: "Reserved" | "Cancelled" | "Pending";
@@ -38,6 +40,8 @@ function mapReservation(r: ApiReservation): Reservation {
     price: koboToNaira(r.price),
     deposit: koboToNaira(r.deposit),
     balance: koboToNaira(r.balance),
+    depositPct: r.depositPct,
+    balancePaid: Boolean(r.balancePaid ?? r.balance === 0),
     releaseAt: typeof r.drop.releaseAt === "string" ? r.drop.releaseAt : new Date(r.drop.releaseAt).toISOString(),
     createdAt: new Date(r.createdAt).getTime(),
     status,
@@ -63,6 +67,7 @@ type ReservationsState = {
     releaseAt: string;
   }) => Promise<{ reservation: Reservation; paymentUrl: string | null }>;
   cancel: (id: string) => Promise<void>;
+  payBalance: (apiId: string) => Promise<{ authorizationUrl: string | null; reference?: string }>;
   hasDrop: (dropId: string) => boolean;
 };
 
@@ -87,6 +92,17 @@ export const useReservations = create<ReservationsState>()((set, get) => ({
     return {
       reservation,
       paymentUrl: res.payment?.authorizationUrl ?? null,
+    };
+  },
+  payBalance: async (apiId) => {
+    const res = await loyaltyApi.payReservationBalance(apiId);
+    const reservation = mapReservation(res.reservation);
+    set((s) => ({
+      items: s.items.map((i) => (i.apiId === apiId || i.id === reservation.id ? reservation : i)),
+    }));
+    return {
+      authorizationUrl: res.payment?.authorizationUrl ?? null,
+      reference: res.payment?.reference,
     };
   },
   cancel: async (id) => {

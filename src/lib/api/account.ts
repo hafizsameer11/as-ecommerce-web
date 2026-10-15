@@ -158,11 +158,14 @@ export const accountApi = {
   reorder: (id: string) =>
     apiRequest(`/store/me/orders/${encodeURIComponent(id)}/reorder`, { method: "POST" }),
 
-  lookupOrder: (number: string, email: string) =>
+  lookupOrder: (orderNumber: string, email: string) =>
     apiRequest<ApiOrderDetail>("/store/orders/lookup", {
       method: "POST",
-      body: { number, email },
+      body: { orderNumber, email },
     }),
+
+  orderByToken: (token: string) =>
+    apiRequest<ApiOrderDetail>(`/store/orders/by-token/${encodeURIComponent(token)}`),
 
   addresses: () => apiRequest<ApiAddress[]>("/store/me/addresses"),
 

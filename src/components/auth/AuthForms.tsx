@@ -46,6 +46,9 @@ export function AuthPanel({
   const signIn = useAuth((s) => s.signIn);
   const register = useAuth((s) => s.register);
   const isLoggedIn = useAuth((s) => s.isLoggedIn);
+  const twoFactorChallenge = useAuth((s) => s.twoFactorChallenge);
+  const completeTwoFactor = useAuth((s) => s.completeTwoFactor);
+  const cancelTwoFactor = useAuth((s) => s.cancelTwoFactor);
 
   useEffect(() => {
     if (isLoggedIn && onDone) onDone();
@@ -60,19 +63,31 @@ export function AuthPanel({
     <div className="w-full max-w-md">
       <AnimatePresence mode="wait">
         <motion.div
-          key={mode}
+          key={twoFactorChallenge ? "2fa" : mode}
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -8 }}
           transition={{ duration: 0.2 }}
         >
-          {mode === "signin" && (
+          {twoFactorChallenge ? (
+            <TwoFactorForm
+              onSubmit={async (code) => {
+                try {
+                  await completeTwoFactor(code);
+                  toast.success("Welcome back");
+                } catch (err) {
+                  toast.error(err instanceof Error ? err.message : "Invalid authentication code");
+                }
+              }}
+              onBack={cancelTwoFactor}
+            />
+          ) : mode === "signin" ? (
             <SignInForm
               initialEmail={email}
               onSubmit={async (email, password) => {
                 try {
-                  await signIn(email, password);
-                  toast.success("Welcome back");
+                  const user = await signIn(email, password);
+                  if (user) toast.success("Welcome back");
                 } catch (err) {
                   toast.error(err instanceof Error ? err.message : "Sign in failed");
                 }
@@ -80,8 +95,8 @@ export function AuthPanel({
               onSwitch={switchMode}
               showGuest={showGuest}
             />
-          )}
-          {mode === "signup" && (
+          ) : null}
+          {!twoFactorChallenge && mode === "signup" && (
             <SignUpForm
               onSubmit={async (data) => {
                 try {
@@ -94,7 +109,7 @@ export function AuthPanel({
               onSwitch={switchMode}
             />
           )}
-          {mode === "forgot" && (
+          {!twoFactorChallenge && mode === "forgot" && (
             <ForgotForm
               initialEmail={email}
               onSubmit={async (email) => {
@@ -109,7 +124,7 @@ export function AuthPanel({
               onSwitch={switchMode}
             />
           )}
-          {mode === "otp" && (
+          {!twoFactorChallenge && mode === "otp" && (
             <OtpForm
               email={email ?? "you@example.com"}
               onVerified={() => {
@@ -233,6 +248,43 @@ export function SignUpForm({
         Already a member?{" "}
         <button type="button" onClick={() => onSwitch("signin")} className="text-ink font-semibold underline underline-offset-2">Sign in</button>
       </p>
+    </form>
+  );
+}
+
+export function TwoFactorForm({
+  onSubmit,
+  onBack,
+}: {
+  onSubmit: (code: string) => void | Promise<void>;
+  onBack: () => void;
+}) {
+  const [code, setCode] = useState("");
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (code.trim().length < 6) return toast.error("Enter your 6-digit code");
+        void onSubmit(code.trim());
+      }}
+      className="space-y-5"
+    >
+      <div>
+        <button type="button" onClick={onBack} className="text-[12px] text-muted-foreground inline-flex items-center gap-1 mb-3">
+          <ArrowLeft className="h-3.5 w-3.5" /> Back to sign in
+        </button>
+        <h1 className="font-display text-2xl font-bold">Two-factor authentication</h1>
+        <p className="text-sm text-muted-foreground mt-1">Enter the code from your authenticator app.</p>
+      </div>
+      <Field
+        icon={Lock}
+        inputMode="numeric"
+        autoComplete="one-time-code"
+        placeholder="6-digit code"
+        value={code}
+        onChange={(e) => setCode(e.target.value.replace(/\s/g, ""))}
+      />
+      <PrimaryBtn type="submit">Verify <Check className="h-4 w-4" /></PrimaryBtn>
     </form>
   );
 }

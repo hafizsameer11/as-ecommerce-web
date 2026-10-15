@@ -7,6 +7,8 @@ import { useCart } from "@/lib/cart-store";
 import { formatCartSize, getProductSizeLabel } from "@/lib/shop-data";
 import { useProductsByIds } from "@/lib/catalog-product-cache";
 import { PaymentBrandLogos } from "./PaymentBrandLogos";
+import { usePublicSettings } from "@/lib/api/settings";
+import { freeShippingThresholdNaira, returnWindowDays } from "@/lib/public-settings-format";
 
 
 export function OrderSummary({
@@ -14,6 +16,7 @@ export function OrderSummary({
   discountCode = "ASL20OFF",
   discount = 0,
   shipping = 0,
+  totalOverride,
   shippingLabel,
   showTrust = true,
   editHref = "/cart",
@@ -22,6 +25,7 @@ export function OrderSummary({
   discountCode?: string;
   discount?: number;
   shipping?: number;
+  totalOverride?: number;
   shippingLabel?: string;
   showTrust?: boolean;
   editHref?: string;
@@ -32,10 +36,19 @@ export function OrderSummary({
   const { products } = useProductsByIds(productIds);
   const productById = useMemo(() => new Map(products.map((p) => [p.id, p])), [products]);
   const subtotal = lines.reduce((s, l) => s + l.price * l.qty, 0);
-  const total = subtotal - discount + shipping;
+  const total = totalOverride ?? subtotal - discount + shipping;
   const count = lines.reduce((s, l) => s + l.qty, 0);
   const shipLabel = shippingLabel ?? (shipping === 0 ? "Free" : naira(shipping));
   const [open, setOpen] = useState(false);
+  const { data: publicSettings } = usePublicSettings();
+  const freeShipThreshold = freeShippingThresholdNaira(publicSettings);
+  const returnDays = returnWindowDays(publicSettings);
+  const freeShippingDetail =
+    freeShipThreshold != null ? `On orders over ${naira(freeShipThreshold)}` : "On orders over ₦50,000";
+  const returnsDetail =
+    returnDays != null
+      ? `${returnDays}-day return or exchange on eligible items.`
+      : "7-day return or exchange on eligible items.";
 
   return (
     <div className={variant === "sidebar" ? "bg-muted/40 border border-border rounded-md p-3 space-y-2.5 md:space-y-3" : "space-y-2.5 md:space-y-3"}>
@@ -120,8 +133,8 @@ export function OrderSummary({
         <div className="grid grid-cols-2 gap-x-3 gap-y-2 pt-2 border-t border-border">
           {[
             { Icon: StrokeRosetteCheckIcon, t: "100% Authentic Guaranteed", d: "Every item is carefully sourced and verified." },
-            { Icon: Truck, t: "Free Shipping", d: "On orders over ₦50,000" },
-            { Icon: RotateCcw, t: "Easy Returns", d: "7-day return or exchange on eligible items." },
+            { Icon: Truck, t: "Free Shipping", d: freeShippingDetail },
+            { Icon: RotateCcw, t: "Easy Returns", d: returnsDetail },
             { Icon: Lock, t: "Secure Payment", d: "Your payment information is safe with us." },
           ].map(({ Icon, t, d }) => (
             <div key={t} className="flex gap-2">

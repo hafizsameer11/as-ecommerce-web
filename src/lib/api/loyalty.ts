@@ -45,6 +45,8 @@ export type ApiReservation = {
   price: number;
   deposit: number;
   balance: number;
+  depositPct?: number;
+  balancePaid?: boolean;
   canCancel?: boolean;
   createdAt: string;
 };
@@ -125,6 +127,19 @@ export const loyaltyApi = {
     apiRequest(`/store/me/reservations/${encodeURIComponent(id)}/cancel`, {
       method: "POST",
       body: { reason },
+    }),
+
+  payReservationBalance: (
+    id: string,
+    body: { method?: "card" | "bank_transfer"; returnUrl?: string } = {}
+  ) =>
+    apiRequest<{
+      reservation: ApiReservation;
+      payment: { authorizationUrl?: string | null; reference?: string } | null;
+    }>(`/store/me/reservations/${encodeURIComponent(id)}/pay-balance`, {
+      method: "POST",
+      body,
+      idempotencyKey: `rb_${crypto.randomUUID()}`,
     }),
 
   createConciergeRequest: async (fields: Record<string, string | number | undefined>, files?: File[]) => {

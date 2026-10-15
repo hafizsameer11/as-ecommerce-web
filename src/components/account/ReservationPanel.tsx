@@ -4,6 +4,8 @@ import { Check, Clock, Lock, CreditCard, Package, Truck, CheckCircle2 } from "lu
 import { toast } from "sonner";
 import { countdownParts, formatDropDate } from "@/lib/coming-soon";
 import { useOrders, type PlacedOrder } from "@/lib/orders-store";
+import { useReservations } from "@/lib/reservations-store";
+import { openPaymentAndVerify } from "@/lib/open-payment";
 import { buttonTap } from "@/lib/motion";
 
 const NGN = new Intl.NumberFormat("en-NG");
@@ -55,10 +57,50 @@ function DropCountdown({ releaseAt }: { releaseAt: string }) {
 export function ReservationPanel({ order }: { order: PlacedOrder }) {
   const r = order.reservation!;
   const now = useNow();
-  const payBalance = useOrders((s) => s.payBalance);
+  const [paying, setPaying] = useState(false);
+  const hydrateReservations = useReservations((s) => s.hydrate);
+  const payReservationBalance = useReservations((s) => s.payBalance);
+  const linkedReservation = useReservations((s) =>
+    s.items.find(
+      (i) =>
+        i.apiId === r.reservationApiId ||
+        i.dropId === r.dropId ||
+        i.number === order.id ||
+        i.id === order.id
+    )
+  );
+  const hydrateOrders = useOrders((s) => s.hydrate);
+
+  useEffect(() => {
+    void hydrateReservations();
+  }, [hydrateReservations]);
+
+  const balancePaid = r.balancePaid || linkedReservation?.balancePaid === true;
+  const depositPct =
+    r.depositPct ??
+    linkedReservation?.depositPct ??
+    (r.retail > 0 ? Math.round((r.deposit / r.retail) * 100) : 50);
+  const reservationApiId = r.reservationApiId ?? linkedReservation?.apiId;
   const released = now !== null && countdownParts(r.releaseAt, now).released;
-  const paidTotal = r.deposit + (r.balancePaid ? r.balance : 0);
+  const paidTotal = r.deposit + (balancePaid ? r.balance : 0);
   const pct = Math.round((paidTotal / r.retail) * 100);
+
+  const handlePayBalance = async () => {
+    if (!reservationApiId || paying) return;
+    setPaying(true);
+    try {
+      const { authorizationUrl, reference } = await payReservationBalance(reservationApiId);
+      if (authorizationUrl) {
+        await openPaymentAndVerify(authorizationUrl, reference ?? "");
+      }
+      await Promise.all([hydrateOrders(), hydrateReservations()]);
+      toast.success(`Balance of ${naira(r.balance)} paid — your piece is being prepared`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not start balance payment");
+    } finally {
+      setPaying(false);
+    }
+  };
 
   return (
     <div className="rounded-2xl border border-border bg-card p-4 sm:p-5 space-y-4">
@@ -88,12 +130,12 @@ export function ReservationPanel({ order }: { order: PlacedOrder }) {
           <span className="font-semibold">{naira(r.retail)}</span>
         </div>
         <div className="mt-2 flex items-center justify-between">
-          <span className="text-muted-foreground">Deposit paid (50%)</span>
+          <span className="text-muted-foreground">Deposit paid ({depositPct}%)</span>
           <span className="font-semibold text-ink">{naira(r.deposit)}</span>
         </div>
         <div className="mt-2 flex items-center justify-between border-t border-border pt-2">
-          <span className="text-muted-foreground">{r.balancePaid ? "Balance paid" : "Balance due on release"}</span>
-          <span className={`font-semibold ${r.balancePaid ? "text-ink" : "text-ink"}`}>{naira(r.balance)}</span>
+          <span className="text-muted-foreground">{balancePaid ? "Balance paid" : "Balance due on release"}</span>
+          <span className={`font-semibold ${balancePaid ? "text-ink" : "text-ink"}`}>{naira(r.balance)}</span>
         </div>
         <div className="mt-3">
           <div className="h-1 w-full overflow-hidden rounded-full bg-border">
@@ -103,7 +145,7 @@ export function ReservationPanel({ order }: { order: PlacedOrder }) {
         </div>
       </div>
 
-      {r.balancePaid ? (
+      {balancePaid ? (
         <div className="flex items-center justify-center gap-2 rounded-[3px] bg-muted px-4 py-3 text-[12px] font-semibold text-ink">
           <CheckCircle2 className="h-4 w-4" /> Fully paid - preparing dispatch
         </div>
@@ -112,15 +154,12 @@ export function ReservationPanel({ order }: { order: PlacedOrder }) {
           <motion.button
             whileTap="tap"
             variants={buttonTap}
-            disabled={!released}
-            onClick={() => {
-              payBalance(order.id);
-              toast.success(`Balance of ${naira(r.balance)} paid - your piece is being prepared`);
-            }}
+            disabled={!released || paying || !reservationApiId}
+            onClick={() => void handlePayBalance()}
             className="flex h-12 w-full items-center justify-center gap-2 rounded-[3px] bg-ink text-[12px] font-bold uppercase tracking-widest text-white disabled:cursor-not-allowed disabled:opacity-40"
           >
             <CreditCard className="h-4 w-4" strokeWidth={2} />
-            Pay Balance - {naira(r.balance)}
+            {paying ? "Opening checkout…" : `Pay Balance - ${naira(r.balance)}`}
           </motion.button>
           <div className="flex items-center justify-center gap-1.5 text-[11px] text-muted-foreground">
             <Lock className="h-3 w-3" strokeWidth={1.75} />
@@ -136,6 +175,16 @@ export function ReservationPanel({ order }: { order: PlacedOrder }) {
 export function ReservationTimeline({ order }: { order: PlacedOrder }) {
   const r = order.reservation!;
   const now = useNow();
+  const linkedReservation = useReservations((s) =>
+    s.items.find(
+      (i) =>
+        i.apiId === r.reservationApiId ||
+        i.dropId === r.dropId ||
+        i.number === order.id ||
+        i.id === order.id
+    )
+  );
+  const balancePaid = r.balancePaid || linkedReservation?.balancePaid === true;
   const released = now !== null && countdownParts(r.releaseAt, now).released;
   const steps = [
     { id: "deposit", label: "Deposit Paid", desc: `${naira(r.deposit)} on ${order.date}`, Icon: Check, done: true },
@@ -144,11 +193,11 @@ export function ReservationTimeline({ order }: { order: PlacedOrder }) {
     {
       id: "balance",
       label: "Balance Payment",
-      desc: r.balancePaid ? `${naira(r.balance)} paid` : `${naira(r.balance)} due on release`,
+      desc: balancePaid ? `${naira(r.balance)} paid` : `${naira(r.balance)} due on release`,
       Icon: CreditCard,
-      done: r.balancePaid,
+      done: balancePaid,
     },
-    { id: "shipped", label: "Shipped", desc: r.balancePaid ? (order.tracking ?? "Awaiting dispatch") : "After balance payment", Icon: Truck, done: r.balancePaid && order.status !== "Processing" },
+    { id: "shipped", label: "Shipped", desc: balancePaid ? (order.tracking ?? "Awaiting dispatch") : "After balance payment", Icon: Truck, done: balancePaid && order.status !== "Processing" },
     { id: "delivered", label: "Delivered", desc: order.status === "Delivered" ? "Successfully delivered" : "Pending", Icon: Package, done: order.status === "Delivered" },
   ];
 

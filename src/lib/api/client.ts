@@ -26,6 +26,10 @@ export class ApiError extends Error {
 
 const DEFAULT_BASE = "http://localhost:4000";
 
+const REFRESH_PATH = "/store/auth/refresh";
+
+let refreshInFlight: Promise<boolean> | null = null;
+
 export function apiBaseUrl() {
   return (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, "") || DEFAULT_BASE;
 }
@@ -38,9 +42,47 @@ export type ApiRequestOptions = {
   rawBody?: BodyInit | null;
   idempotencyKey?: string;
   signal?: AbortSignal;
+  /** Internal: skip 401 refresh retry (prevents loops) */
+  _authRetry?: boolean;
 };
 
-export async function apiRequest<T>(path: string, opts: ApiRequestOptions = {}): Promise<T> {
+function shouldAttemptRefresh(status: number, code: string, path: string, authRetry?: boolean) {
+  if (authRetry) return false;
+  if (status !== 401) return false;
+  if (code !== "TOKEN_INVALID" && code !== "UNAUTHENTICATED") return false;
+  const normalized = path.startsWith("/") ? path : `/${path}`;
+  if (normalized.startsWith(REFRESH_PATH) || normalized.includes("/auth/login")) return false;
+  return true;
+}
+
+async function refreshStoreSession(): Promise<boolean> {
+  if (refreshInFlight) return refreshInFlight;
+  refreshInFlight = (async () => {
+    try {
+      const url = `${apiBaseUrl()}/api/v1${REFRESH_PATH}`;
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: "{}",
+        credentials: "include",
+      });
+      return res.ok;
+    } catch {
+      return false;
+    }
+  })().finally(() => {
+    refreshInFlight = null;
+  });
+  return refreshInFlight;
+}
+
+type ParsedResponse = {
+  res: Response;
+  json: unknown;
+  error: ApiError | null;
+};
+
+async function fetchApi(path: string, opts: ApiRequestOptions): Promise<ParsedResponse> {
   const url = `${apiBaseUrl()}/api/v1${path.startsWith("/") ? path : `/${path}`}`;
   const headers: Record<string, string> = { ...(opts.headers ?? {}) };
 
@@ -62,7 +104,9 @@ export async function apiRequest<T>(path: string, opts: ApiRequestOptions = {}):
     signal: opts.signal,
   });
 
-  if (res.status === 204) return undefined as T;
+  if (res.status === 204) {
+    return { res, json: null, error: null };
+  }
 
   const text = await res.text();
   let json: unknown = null;
@@ -75,10 +119,31 @@ export async function apiRequest<T>(path: string, opts: ApiRequestOptions = {}):
   }
 
   if (!res.ok) {
-    throw new ApiError(res.status, json as ApiErrorBody | null, res.statusText || "Request failed");
+    const errBody = json as ApiErrorBody | null;
+    const error = new ApiError(res.status, errBody, res.statusText || "Request failed");
+    return { res, json, error };
   }
 
-  // Backend success envelope: { data: T, meta? }
+  return { res, json, error: null };
+}
+
+export async function apiRequest<T>(path: string, opts: ApiRequestOptions = {}): Promise<T> {
+  let parsed = await fetchApi(path, opts);
+
+  if (
+    parsed.error &&
+    shouldAttemptRefresh(parsed.error.status, parsed.error.code, path, opts._authRetry)
+  ) {
+    const refreshed = await refreshStoreSession();
+    if (refreshed) {
+      parsed = await fetchApi(path, { ...opts, _authRetry: true });
+    }
+  }
+
+  if (parsed.error) throw parsed.error;
+  if (parsed.res.status === 204) return undefined as T;
+
+  const json = parsed.json;
   if (json && typeof json === "object" && json !== null && "data" in json) {
     return (json as { data: T }).data;
   }
@@ -89,43 +154,22 @@ export async function apiRequestWithMeta<T>(
   path: string,
   opts: ApiRequestOptions = {}
 ): Promise<{ data: T; meta?: Record<string, unknown> }> {
-  const url = `${apiBaseUrl()}/api/v1${path.startsWith("/") ? path : `/${path}`}`;
-  const headers: Record<string, string> = { ...(opts.headers ?? {}) };
+  let parsed = await fetchApi(path, opts);
 
-  if (opts.idempotencyKey) headers["Idempotency-Key"] = opts.idempotencyKey;
-
-  let body: BodyInit | undefined;
-  if (opts.rawBody !== undefined) {
-    body = opts.rawBody ?? undefined;
-  } else if (opts.body !== undefined) {
-    headers["Content-Type"] = headers["Content-Type"] ?? "application/json";
-    body = JSON.stringify(opts.body);
-  }
-
-  const res = await fetch(url, {
-    method: opts.method ?? (opts.body !== undefined || opts.rawBody !== undefined ? "POST" : "GET"),
-    headers,
-    body,
-    credentials: "include",
-    signal: opts.signal,
-  });
-
-  if (res.status === 204) return { data: undefined as T };
-
-  const text = await res.text();
-  let json: unknown = null;
-  if (text) {
-    try {
-      json = JSON.parse(text);
-    } catch {
-      json = null;
+  if (
+    parsed.error &&
+    shouldAttemptRefresh(parsed.error.status, parsed.error.code, path, opts._authRetry)
+  ) {
+    const refreshed = await refreshStoreSession();
+    if (refreshed) {
+      parsed = await fetchApi(path, { ...opts, _authRetry: true });
     }
   }
 
-  if (!res.ok) {
-    throw new ApiError(res.status, json as ApiErrorBody | null, res.statusText || "Request failed");
-  }
+  if (parsed.error) throw parsed.error;
+  if (parsed.res.status === 204) return { data: undefined as T };
 
+  const json = parsed.json;
   if (json && typeof json === "object" && json !== null && "data" in json) {
     const envelope = json as { data: T; meta?: Record<string, unknown> };
     return { data: envelope.data, meta: envelope.meta };

@@ -14,16 +14,16 @@ export const Route = createFileRoute("/track-request")({
       { property: "og:description", content: "Real-time tracking for your concierge request, sourcing to delivery." },
     ],
   }),
-  validateSearch: z.object({ id: z.string().optional() }).parse,
+  validateSearch: z.object({ id: z.string().optional(), email: z.string().optional() }).parse,
   component: TrackRequestPage,
 });
 
 function TrackRequestPage() {
   const isDesktop = useIsDesktop();
-  const { id } = Route.useSearch();
+  const { id, email } = Route.useSearch();
   return (
     <>
-      {isDesktop ? <DesktopTrackRequest id={id} /> : <MobileTrackRequest id={id} />}
+      {isDesktop ? <DesktopTrackRequest id={id} email={email} /> : <MobileTrackRequest id={id} email={email} />}
       <Toaster position="top-center" />
     </>
   );

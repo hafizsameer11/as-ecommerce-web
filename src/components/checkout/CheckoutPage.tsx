@@ -3,9 +3,31 @@ import { useNavigate } from "@tanstack/react-router";
 import { X, ShoppingBag } from "lucide-react";
 import { useIsDesktop } from "@/hooks/use-breakpoint";
 import { DesktopShell } from "@/components/shell/DesktopShell";
-import { useCartCount } from "@/lib/cart-store";
+import { useCartCount, useCartSubtotal } from "@/lib/cart-store";
+import { useCheckout, shippingFor, checkoutTotalFallback } from "@/lib/checkout-store";
 import { CheckoutStepper } from "./CheckoutStepper";
 import { OrderSummary } from "./OrderSummary";
+
+function ConnectedOrderSummary() {
+  const coupon = useCheckout((s) => s.coupon);
+  const discountAmount = useCheckout((s) => s.discountAmount);
+  const discountPct = useCheckout((s) => s.discountPct);
+  const delivery = useCheckout((s) => s.delivery);
+  const address = useCheckout((s) => s.address);
+  const totalAmount = useCheckout((s) => s.totalAmount);
+  const subtotal = useCartSubtotal();
+  const discount = discountAmount > 0 ? Math.round(discountAmount) : Math.round(subtotal * (discountPct / 100));
+  const shipping = shippingFor(delivery, address.state);
+  const total = checkoutTotalFallback(subtotal, discount, shipping);
+  return (
+    <OrderSummary
+      discount={discount}
+      discountCode={coupon ?? "ASL20OFF"}
+      shipping={shipping}
+      totalOverride={totalAmount > 0 ? totalAmount : total}
+    />
+  );
+}
 
 /**
  * Two-column shell for checkout on desktop. On mobile it renders a phone-style
@@ -32,7 +54,7 @@ export function CheckoutPage({
   const isDesktop = useIsDesktop();
   const navigate = useNavigate();
   const count = useCartCount();
-  const SummaryEl = summary ?? <OrderSummary />;
+  const SummaryEl = summary ?? <ConnectedOrderSummary />;
 
   if (isDesktop) {
     return (
