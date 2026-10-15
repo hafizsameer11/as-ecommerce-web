@@ -5,13 +5,8 @@ import { ChevronRight, MessageSquare } from "lucide-react";
 import { useTickets } from "@/lib/tickets-store";
 import { DesktopShell } from "@/components/shell/DesktopShell";
 import { AccountSidebar } from "./AccountSidebar";
-import {
-  heroBanner,
-  supportChannels,
-  faqItems,
-  supportHours,
-  satisfactionBanner,
-} from "./helpData";
+import { heroBanner, supportChannels, supportHours, satisfactionBanner } from "./helpData";
+import { useStoreFaqs } from "@/lib/faq-store";
 import { fadeInUp, staggerContainer, staggerItem } from "@/lib/motion";
 
 export function DesktopHelp() {
@@ -20,9 +15,12 @@ export function DesktopHelp() {
   const openTicketCount = useTickets((s) =>
     s.tickets.filter((t) => t.status !== "closed" && t.status !== "resolved").length
   );
+  const hydrateFaqs = useStoreFaqs((s) => s.hydrate);
+  const faqItems = useStoreFaqs((s) => s.items);
   useEffect(() => {
     void hydrate();
-  }, [hydrate]);
+    void hydrateFaqs();
+  }, [hydrate, hydrateFaqs]);
 
   return (
     <DesktopShell active="Account">
@@ -122,15 +120,15 @@ export function DesktopHelp() {
             <motion.div variants={fadeInUp} initial="hidden" animate="visible">
               <h2 className="font-display text-lg font-bold mb-4">Frequently Asked Questions</h2>
               <div className="rounded-xl border border-border bg-card overflow-hidden">
-                {faqItems.map((f, idx) => (
+                {faqItems.slice(0, 5).map((f, idx) => (
                   <button
-                    key={f.id}
-                    onClick={() => nav({ to: "/account/help/$topic", params: { topic: "orders" } })}
+                    key={f.q}
+                    onClick={() => nav({ to: "/faq" })}
                     className={`w-full flex items-center justify-between px-5 py-4 text-left hover:bg-muted/30 transition-colors ${
-                      idx !== faqItems.length - 1 ? "border-b border-border" : ""
+                      idx !== Math.min(faqItems.length, 5) - 1 ? "border-b border-border" : ""
                     }`}
                   >
-                    <span className="text-[14px] font-medium">{f.question}</span>
+                    <span className="text-[14px] font-medium">{f.q}</span>
                     <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0 ml-4" />
                   </button>
                 ))}

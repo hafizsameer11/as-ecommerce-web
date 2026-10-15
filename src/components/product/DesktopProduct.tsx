@@ -9,7 +9,7 @@ import { ProductCard } from "@/components/shop/ProductCard";
 import { DropReserveBlock } from "@/components/product/DropReserveBlock";
 import type { Drop } from "@/lib/coming-soon";
 import {
-  formatNaira, getRelatedProducts, isConciergeProduct, isPriceOnRequest, getProductGallery,
+  formatNaira, isConciergeProduct, isPriceOnRequest, getProductGallery,
   getProductCopy, getProductRating, getSaleInfo, getSizeAvailability, getProductSizeLabel, isOutOfStock, type Product,
 } from "@/lib/shop-data";
 import { buttonTap } from "@/lib/motion";
@@ -20,6 +20,7 @@ import { ProductReviews } from "@/components/product/ProductReviews";
 import { goToLabel } from "@/lib/nav-resolve";
 import { shareProduct } from "@/lib/product-sharing";
 import { useSizeGuideFor } from "@/lib/size-guide-store";
+import { useRelatedProducts } from "@/lib/catalog-product-cache";
 
 const ALL_TABS = ["PRODUCT DETAILS", "REVIEWS", "SHIPPING", "RETURNS"];
 
@@ -64,7 +65,7 @@ export function DesktopProduct({ product, forceConcierge = false, drop }: { prod
   };
 
   const gallery = getProductGallery(product);
-  const related = getRelatedProducts(product);
+  const related = useRelatedProducts(product.id, 4);
   const { originalPrice, discountPct } = getSaleInfo(product);
   const { description, features, styleCode } = getProductCopy(product);
   const { rating, reviews } = getProductRating(product.id);

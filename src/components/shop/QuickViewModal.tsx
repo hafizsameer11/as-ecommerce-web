@@ -8,7 +8,6 @@ import { useWishlist } from "@/lib/wishlist";
 import { useCart } from "@/lib/cart-store";
 import {
   formatNaira,
-  getProductById,
   getProductCopy,
   getProductRating,
   getSaleInfo,
@@ -17,6 +16,8 @@ import {
   isOutOfStock,
   isPriceOnRequest,
 } from "@/lib/shop-data";
+import { useProduct } from "@/lib/catalog-product-cache";
+
 export function QuickViewModal() {
   const productId = useQuickView((s) => s.productId);
   const close = useQuickView((s) => s.close);
@@ -25,7 +26,7 @@ export function QuickViewModal() {
   const wishIds = useWishlist((s) => s.ids);
   const toggleWish = useWishlist((s) => s.toggle);
 
-  const product = productId ? getProductById(productId) : undefined;
+  const { product } = useProduct(productId);
   const availability = useMemo(() => (product ? getSizeAvailability(product) : {}), [product]);
 
   const [size, setSize] = useState<string | null>(null);

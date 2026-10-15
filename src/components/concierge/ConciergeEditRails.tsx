@@ -1,15 +1,9 @@
 import { motion } from "framer-motion";
 import { Link } from "@tanstack/react-router";
 import { ProductCard } from "@/components/shop/ProductCard";
-import { getAllProducts, getNewArrivals, isConciergeProduct, type Product } from "@/lib/shop-data";
+import { type Product } from "@/lib/shop-data";
 import { fadeInUp } from "@/lib/motion";
-
-function useEditProducts(limit: number): Product[] {
-  const all = getAllProducts();
-  const picked = all.filter(isConciergeProduct);
-  const list = picked.length >= 4 ? picked : [...picked, ...all.filter((p) => !picked.includes(p))];
-  return list.slice(0, limit);
-}
+import { useStoreProducts } from "@/lib/catalog-query";
 
 function Rail({
   title,
@@ -51,8 +45,8 @@ function Rail({
 }
 
 export function ConciergeEditRails({ limit = 10 }: { limit?: number }) {
-  const edit = useEditProducts(limit);
-  const newSeason = getNewArrivals(limit);
+  const { products: edit } = useStoreProducts({ concierge: true, pageSize: limit, sort: "featured" });
+  const { products: newSeason } = useStoreProducts({ preset: "new-arrivals", pageSize: limit });
 
   return (
     <div className="md:mx-auto md:max-w-[1600px]">

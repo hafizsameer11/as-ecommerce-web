@@ -4,12 +4,8 @@ import { motion } from "framer-motion";
 import { ChevronRight, MessageSquare, ArrowLeft, Bell } from "lucide-react";
 import { useTickets } from "@/lib/tickets-store";
 import { MobileShell } from "@/components/shell/MobileShell";
-import {
-  heroBanner,
-  supportChannels,
-  faqItems,
-  satisfactionBanner,
-} from "./helpData";
+import { heroBanner, supportChannels, satisfactionBanner } from "./helpData";
+import { useStoreFaqs } from "@/lib/faq-store";
 import { fadeInUp, staggerContainer, staggerItem } from "@/lib/motion";
 
 export function MobileHelp() {
@@ -18,9 +14,12 @@ export function MobileHelp() {
   const openTicketCount = useTickets((s) =>
     s.tickets.filter((t) => t.status !== "closed" && t.status !== "resolved").length
   );
+  const hydrateFaqs = useStoreFaqs((s) => s.hydrate);
+  const faqItems = useStoreFaqs((s) => s.items);
   useEffect(() => {
     void hydrate();
-  }, [hydrate]);
+    void hydrateFaqs();
+  }, [hydrate, hydrateFaqs]);
   return (
     <MobileShell activeBottom="account" headerVariant="account" showTopTabs={false}>
       {/* Sub header: back + title */}
@@ -120,15 +119,15 @@ export function MobileHelp() {
             </button>
           </div>
           <div className="rounded-xl border border-border bg-card overflow-hidden">
-            {faqItems.map((f, idx) => (
+            {faqItems.slice(0, 5).map((f, idx) => (
               <button
-                key={f.id}
-                onClick={() => nav({ to: "/account/help/$topic", params: { topic: "orders" } })}
+                key={f.q}
+                onClick={() => nav({ to: "/faq" })}
                 className={`w-full flex items-center justify-between px-3 py-3 text-left hover:bg-muted/20 transition-colors ${
-                  idx !== faqItems.length - 1 ? "border-b border-border" : ""
+                  idx !== Math.min(faqItems.length, 5) - 1 ? "border-b border-border" : ""
                 }`}
               >
-                <span className="text-[13px] font-medium pr-4">{f.question}</span>
+                <span className="text-[13px] font-medium pr-4">{f.q}</span>
                 <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0" />
               </button>
             ))}

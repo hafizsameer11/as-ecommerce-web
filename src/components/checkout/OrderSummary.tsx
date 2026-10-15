@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { Truck, RotateCcw, Lock, ChevronDown } from "lucide-react";
 import { StrokeRosetteCheckIcon } from "@/components/home/TrustIcons";
-import { cartLines as fallbackLines, naira } from "./checkoutData";
+import { naira } from "./checkoutData";
 import { useCart } from "@/lib/cart-store";
-import { formatCartSize, getProductById, getProductSizeLabel } from "@/lib/shop-data";
+import { formatCartSize, getProductSizeLabel } from "@/lib/shop-data";
+import { useProductsByIds } from "@/lib/catalog-product-cache";
 import { PaymentBrandLogos } from "./PaymentBrandLogos";
 
 
@@ -26,7 +27,10 @@ export function OrderSummary({
   editHref?: string;
 }) {
   const storeItems = useCart((s) => s.items);
-  const lines = storeItems.length > 0 ? storeItems : fallbackLines;
+  const lines = storeItems;
+  const productIds = useMemo(() => lines.map((l) => l.productId).filter(Boolean) as string[], [lines]);
+  const { products } = useProductsByIds(productIds);
+  const productById = useMemo(() => new Map(products.map((p) => [p.id, p])), [products]);
   const subtotal = lines.reduce((s, l) => s + l.price * l.qty, 0);
   const total = subtotal - discount + shipping;
   const count = lines.reduce((s, l) => s + l.qty, 0);
@@ -56,7 +60,7 @@ export function OrderSummary({
       {open && (
         <div className="divide-y divide-border">
           {lines.map((l) => {
-            const product = l.productId ? getProductById(l.productId) : undefined;
+            const product = l.productId ? productById.get(l.productId) : undefined;
             const sizeLabel = l.size
               ? product
                 ? getProductSizeLabel(product, l.size)

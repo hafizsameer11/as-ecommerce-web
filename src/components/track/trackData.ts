@@ -14,8 +14,6 @@ export const trackSteps = [
   { id: "delivered", label: "DELIVERED", sub: "Your order has been delivered.", Icon: CheckCircle2, short: "Delivered", date: "Est. May 28 - 29" },
 ];
 
-export const currentStepIndex = 8; // In Transit
-
 export const trackTrust = [
   { Icon: StrokeRosetteCheckIcon, title: "AUTHENTIC GUARANTEED", sub: "We source 100% authentic items from trusted partners." },
   { Icon: Lock, title: "SECURE PAYMENT", sub: "Your payment is safe with us. Multiple secure options." },
@@ -29,18 +27,6 @@ export const helpOptions = [
   { Icon: Mail, title: "Email Support", sub: "customerservice@asloriginals.com" },
   { Icon: HelpCircle, title: "FAQ", sub: "View frequently asked questions." },
 ];
-
-export const mockRequest = {
-  id: "ASL123456",
-  date: "May 20, 2024",
-  item: 'Nike Air Jordan 1 Retro High OG "Black Toe Reimagined"',
-  size: "UK 9 / US 10",
-  color: "Black / Red / White",
-  status: "IN TRANSIT",
-  tracking: "1234567890",
-  courier: "DHL Express",
-  estimated: "May 28 - May 29",
-};
 
 export function statusToStepIndex(status: string): number {
   switch (status.toLowerCase()) {

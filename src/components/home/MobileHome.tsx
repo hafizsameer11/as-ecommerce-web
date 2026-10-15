@@ -12,9 +12,10 @@ import { PromoBanner } from "./PromoBanner";
 import promoImage from "@/assets/hero-sneakers.jpg";
 import { bestSellers, newArrivals } from "@/lib/mock-data";
 import { getDrops, formatDropDate, hydrateDrops, subscribeDrops } from "@/lib/coming-soon";
-
+import { useCatalogVersion } from "@/lib/catalog-version";
 
 export function MobileHome() {
+  useCatalogVersion((s) => s.v);
   const [, tick] = useState(0);
   useEffect(() => {
     void hydrateDrops();

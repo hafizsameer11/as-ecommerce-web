@@ -2,8 +2,10 @@ import { motion } from "framer-motion";
 import { Link } from "@tanstack/react-router";
 import { categories } from "@/lib/mock-data";
 import { fadeInUp, staggerContainer, staggerItem, cardHover, imageZoom, buttonTap } from "@/lib/motion";
+import { useCatalogVersion } from "@/lib/catalog-version";
 
 export function CategoryGrid() {
+  useCatalogVersion((s) => s.v);
   return (
     <motion.section
       initial="hidden"

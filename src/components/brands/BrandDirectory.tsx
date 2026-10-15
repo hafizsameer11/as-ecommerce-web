@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "@tanstack/react-router";
 import { Search, SlidersHorizontal, X, ChevronDown, Check } from "lucide-react";
 import { buttonTap } from "@/lib/motion";
-import { categories, getAllProducts, type Product } from "@/lib/shop-data";
+import { categories, type Product } from "@/lib/shop-data";
 
 export type BrandEntry = { name: string; count: number; sample: Product; categories: string[] };
 
@@ -25,8 +25,7 @@ export function buildBrandEntries(products: Product[]): BrandEntry[] {
 }
 
 export function useAllBrandEntries() {
-  const local = useMemo(() => buildBrandEntries(getAllProducts()), []);
-  const [brands, setBrands] = useState<BrandEntry[]>(local);
+  const [brands, setBrands] = useState<BrandEntry[]>([]);
 
   useEffect(() => {
     let cancelled = false;
@@ -34,29 +33,26 @@ export function useAllBrandEntries() {
       .then(({ catalogApi }) => catalogApi.brands())
       .then((rows) => {
         if (cancelled || !rows?.length) return;
-        const products = getAllProducts();
         setBrands(
           rows
             .map((b) => {
-              const sample =
-                products.find((p) => p.brandHandle === b.handle || p.brand.toLowerCase() === b.name.toLowerCase()) ??
-                ({
-                  id: b.handle,
-                  brand: b.name,
-                  brandHandle: b.handle,
-                  name: b.name,
-                  price: 0,
-                  image: b.image || "/favicon.png",
-                  category: "clothing",
-                  sizes: ["One Size"],
-                  colors: [{ name: "Default", hex: "#0a0a0a" }],
-                  availability: "In Stock" as const,
-                } satisfies Product);
+              const sample = {
+                id: b.handle,
+                brand: b.name,
+                brandHandle: b.handle,
+                name: b.name,
+                price: 0,
+                image: b.image || "/favicon.png",
+                category: "clothing",
+                sizes: ["One Size"],
+                colors: [{ name: "Default", hex: "#0a0a0a" }],
+                availability: "In Stock" as const,
+              } satisfies Product;
               return {
                 name: b.name.toUpperCase(),
                 count: b.itemCount ?? 0,
                 sample,
-                categories: [...new Set(products.filter((p) => p.brandHandle === b.handle || p.brand === b.name).map((p) => p.category))],
+                categories: [] as string[],
               };
             })
             .sort((a, b) => a.name.localeCompare(b.name))
@@ -66,7 +62,7 @@ export function useAllBrandEntries() {
     return () => {
       cancelled = true;
     };
-  }, [local]);
+  }, []);
 
   return brands;
 }

@@ -7,8 +7,9 @@ import { toast } from "sonner";
 import { MobileShell } from "@/components/shell/MobileShell";
 import {
   formatNaira, isConciergeProduct, isPriceOnRequest, getProductGallery, getProductCopy,
-  getProductRating, getSaleInfo, getSizeAvailability, getProductSizeLabel, isOutOfStock, getRelatedProducts, type Product,
+  getProductRating, getSaleInfo, getSizeAvailability, getProductSizeLabel, isOutOfStock, type Product,
 } from "@/lib/shop-data";
+import { useRelatedProducts } from "@/lib/catalog-product-cache";
 import { buttonTap } from "@/lib/motion";
 import { useCart } from "@/lib/cart-store";
 import { useWishlist } from "@/lib/wishlist";
@@ -58,7 +59,7 @@ export function MobileProduct({ product, forceConcierge = false, drop }: { produ
 
 
   const gallery = getProductGallery(product);
-  const related = getRelatedProducts(product, 8);
+  const related = useRelatedProducts(product.id, 8);
   const { originalPrice, discountPct } = getSaleInfo(product);
   const { description, features, styleCode } = getProductCopy(product);
   const { rating, reviews } = getProductRating(product.id);

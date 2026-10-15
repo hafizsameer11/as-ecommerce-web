@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { HelpCircle } from "lucide-react";
 import { cmsApi } from "@/lib/api/cms";
-import { faqCategories, faqItems as seedItems, type FaqItem } from "@/components/faq/faqData";
+import { faqCategories, type FaqItem } from "@/components/faq/faqData";
 
 type State = {
   items: FaqItem[];
@@ -20,7 +20,7 @@ function mapCategorySlug(slug?: string) {
 }
 
 export const useStoreFaqs = create<State>()((set) => ({
-  items: seedItems,
+  items: [],
   categories: faqCategories,
   hydrated: false,
   hydrate: async () => {

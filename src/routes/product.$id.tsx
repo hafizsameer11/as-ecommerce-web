@@ -12,19 +12,16 @@ import { mapApiProduct, rememberApiMeta } from "@/lib/api/product-mapper";
 export const Route = createFileRoute("/product/$id")({
   validateSearch: z.object({ concierge: z.boolean().optional() }),
   loader: async ({ params }) => {
-    await hydrateShopCatalogFromApi().catch(() => undefined);
-    let product = getProductById(params.id);
-    if (!product) {
-      try {
-        const dto = await catalogApi.getProduct(params.id);
-        rememberApiMeta(dto);
-        product = mapApiProduct(dto);
-      } catch {
-        product = undefined;
-      }
+    try {
+      const dto = await catalogApi.getProduct(params.id);
+      rememberApiMeta(dto);
+      return { product: mapApiProduct(dto) };
+    } catch {
+      await hydrateShopCatalogFromApi().catch(() => undefined);
+      const product = getProductById(params.id);
+      if (!product) throw notFound();
+      return { product };
     }
-    if (!product) throw notFound();
-    return { product };
   },
   head: ({ loaderData }) => {
     const p = loaderData?.product;

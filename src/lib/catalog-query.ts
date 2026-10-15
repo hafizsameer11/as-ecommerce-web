@@ -1,16 +1,10 @@
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { catalogApi, type ProductListMeta, type ProductListQuery } from "@/lib/api/catalog";
 import { mapApiProduct, rememberApiMeta } from "@/lib/api/product-mapper";
 import { nairaToKobo } from "@/lib/api/client";
 import type { FilterState } from "@/components/shop/ProductFilters";
-import {
-  getProductsByCategory,
-  getNewArrivals,
-  isOnSale,
-  shopProducts,
-  type Product,
-} from "@/lib/shop-data";
-import { isCatalogHydrated } from "@/lib/catalog-hydrate";
+import type { Product } from "@/lib/shop-data";
 
 const AVAIL_MAP: Record<string, string> = {
   "In Stock": "in_stock",
@@ -28,7 +22,7 @@ const SORT_MAP: Record<string, ProductListQuery["sort"]> = {
   "name-az": "name",
   trending: "trending",
   "best-selling": "best_selling",
-  "best_selling": "best_selling",
+  best_selling: "best_selling",
 };
 
 const PRICE_RANGE_KOBO: Record<string, { min?: number; max?: number }> = {
@@ -51,6 +45,9 @@ export type StoreListOptions = {
   pageSize?: number;
   /** Special listing presets mapped to API sort */
   preset?: "trending" | "best-sellers" | "new-arrivals" | "sales";
+  /** When true, show a toast on load failure (PLP pages). */
+  toastOnError?: boolean;
+  concierge?: boolean;
 };
 
 export function buildProductListQuery(opts: StoreListOptions): ProductListQuery {
@@ -63,6 +60,7 @@ export function buildProductListQuery(opts: StoreListOptions): ProductListQuery 
   if (opts.q) query.q = opts.q;
   if (opts.collection) query.collection = opts.collection;
   if (opts.brand) query.brand = opts.brand;
+  if (opts.concierge) query.concierge = true;
 
   if (opts.preset === "sales" || opts.onSale || opts.category === "sale" || opts.category === "sales") {
     query.onSale = true;
@@ -110,63 +108,6 @@ export function buildProductListQuery(opts: StoreListOptions): ProductListQuery 
   return query;
 }
 
-function fallbackProducts(opts: StoreListOptions): Product[] {
-  if (opts.preset === "new-arrivals" || opts.category === "new") return getNewArrivals(opts.pageSize ?? 48);
-  if (opts.preset === "trending" || opts.category === "trending") return getProductsByCategory("trending");
-  if (opts.preset === "best-sellers" || opts.category === "best-sellers") return getProductsByCategory("best-sellers");
-  if (opts.preset === "sales" || opts.onSale || opts.category === "sale" || opts.category === "sales") {
-    return shopProducts.filter(isOnSale);
-  }
-  if (opts.brand) {
-    const key = opts.brand.toLowerCase();
-    return shopProducts.filter(
-      (p) =>
-        p.brand.toLowerCase() === key ||
-        p.brand.toLowerCase().replace(/\s+/g, "-") === key ||
-        (p.brandHandle ?? "").toLowerCase() === key
-    );
-  }
-  if (opts.category) return getProductsByCategory(opts.category, opts.subcategory);
-  if (opts.q) {
-    const q = opts.q.toLowerCase();
-    return shopProducts.filter((p) => `${p.brand} ${p.name}`.toLowerCase().includes(q));
-  }
-  return [...shopProducts];
-}
-
-function applyClientFilters(list: Product[], opts: StoreListOptions): Product[] {
-  let result = [...list];
-  const f = opts.filters;
-  if (!f) return result;
-  if (f.subCategories.length) result = result.filter((p) => p.subcategory && f.subCategories.includes(p.subcategory));
-  if (f.sizes.length) result = result.filter((p) => p.sizes.some((s) => f.sizes.includes(s)));
-  if (f.colors.length) result = result.filter((p) => p.colors.some((c) => f.colors.includes(c.name)));
-  if (f.brands.length) result = result.filter((p) => f.brands.includes(p.brand));
-  if (f.availability.length) result = result.filter((p) => f.availability.includes(p.availability));
-  if (f.categories.length) result = result.filter((p) => f.categories.includes(p.category));
-  if (f.priceRanges.length) {
-    result = result.filter((p) =>
-      f.priceRanges.some((r) => {
-        if (r === "under-100k") return p.price < 100000;
-        if (r === "100k-250k") return p.price >= 100000 && p.price <= 250000;
-        if (r === "250k-500k") return p.price >= 250000 && p.price <= 500000;
-        if (r === "above-500k") return p.price >= 500000;
-        return true;
-      })
-    );
-  }
-  if (f.minPrice || f.maxPrice) {
-    const min = f.minPrice ? Number(f.minPrice) : 0;
-    const max = f.maxPrice ? Number(f.maxPrice) : Infinity;
-    result = result.filter((p) => p.price >= min && p.price <= max);
-  }
-  const sort = opts.sort ?? "featured";
-  if (sort === "price-low") result.sort((a, b) => a.price - b.price);
-  else if (sort === "price-high") result.sort((a, b) => b.price - a.price);
-  else if (sort === "name-az") result.sort((a, b) => a.name.localeCompare(b.name));
-  return result;
-}
-
 export type StoreProductsResult = {
   products: Product[];
   meta: ProductListMeta;
@@ -175,7 +116,7 @@ export type StoreProductsResult = {
   error: string | null;
 };
 
-/** Live listing via GET /store/products (+ facets-ready query). Falls back to shop-data only if the request fails. */
+/** Live listing via GET /store/products. No local catalog fallback on failure. */
 export function useStoreProducts(opts: StoreListOptions): StoreProductsResult {
   const [products, setProducts] = useState<Product[]>([]);
   const [meta, setMeta] = useState<ProductListMeta>({});
@@ -207,15 +148,13 @@ export function useStoreProducts(opts: StoreListOptions): StoreProductsResult {
       .catch((err) => {
         if (cancelled) return;
         console.warn("[catalog] listProducts", err);
-        const fb = applyClientFilters(fallbackProducts(opts), opts);
-        const page = opts.page ?? 1;
-        const pageSize = opts.pageSize ?? 24;
-        const start = (page - 1) * pageSize;
-        setProducts(isCatalogHydrated() || fb.length ? fb.slice(start, start + pageSize) : fb.slice(start, start + pageSize));
-        setMeta({ page, pageSize, total: fb.length, pageCount: Math.max(1, Math.ceil(fb.length / pageSize)) });
+        const message = err instanceof Error ? err.message : "Failed to load products";
+        setProducts([]);
+        setMeta({ page: opts.page ?? 1, pageSize: opts.pageSize ?? 24, total: 0, pageCount: 0 });
         setFromApi(false);
-        setError(err instanceof Error ? err.message : "Failed to load products");
+        setError(message);
         setLoading(false);
+        if (opts.toastOnError) toast.error(message);
       });
 
     return () => {
@@ -227,23 +166,26 @@ export function useStoreProducts(opts: StoreListOptions): StoreProductsResult {
   return { products, meta, loading, fromApi, error };
 }
 
-export async function fetchStoreProducts(opts: StoreListOptions): Promise<{ products: Product[]; meta: ProductListMeta; fromApi: boolean }> {
+export async function fetchStoreProducts(opts: StoreListOptions): Promise<{
+  products: Product[];
+  meta: ProductListMeta;
+  fromApi: boolean;
+  error: string | null;
+}> {
   try {
     const { items, meta } = await catalogApi.listProducts(buildProductListQuery(opts));
     const products = items.map((p) => {
       rememberApiMeta(p);
       return mapApiProduct(p);
     });
-    return { products, meta, fromApi: true };
+    return { products, meta, fromApi: true, error: null };
   } catch (err) {
     console.warn("[catalog] fetchStoreProducts", err);
-    const fb = applyClientFilters(fallbackProducts(opts), opts);
-    const page = opts.page ?? 1;
-    const pageSize = opts.pageSize ?? 24;
     return {
-      products: fb.slice((page - 1) * pageSize, page * pageSize),
-      meta: { page, pageSize, total: fb.length, pageCount: Math.max(1, Math.ceil(fb.length / pageSize)) },
+      products: [],
+      meta: { page: opts.page ?? 1, pageSize: opts.pageSize ?? 24, total: 0, pageCount: 0 },
       fromApi: false,
+      error: err instanceof Error ? err.message : "Failed to load products",
     };
   }
 }

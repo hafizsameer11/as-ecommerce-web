@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { Minus, Plus, X, ArrowRight, ShoppingBag, AlertTriangle, CircleCheck } from "lucide-react";
@@ -7,7 +7,8 @@ import { OrderSummary } from "@/components/checkout/OrderSummary";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { naira } from "@/components/checkout/checkoutData";
 import { useCart, type CartItem } from "@/lib/cart-store";
-import { getProductById, getSizeAvailability, getProductSizeLabel, isOutOfStock } from "@/lib/shop-data";
+import { getSizeAvailability, getProductSizeLabel, isOutOfStock, type Product } from "@/lib/shop-data";
+import { useProductsByIds } from "@/lib/catalog-product-cache";
 import { useCheckout } from "@/lib/checkout-store";
 
 export const Route = createFileRoute("/cart")({
@@ -23,6 +24,13 @@ export const Route = createFileRoute("/cart")({
 function CartPage() {
   const navigate = useNavigate();
   const lines = useCart((s) => s.items);
+  const productIds = useMemo(() => lines.map((l) => l.productId), [lines]);
+  const { products: cartProducts } = useProductsByIds(productIds);
+  const productById = useMemo(
+    () => new Map<string, Product>(cartProducts.map((p) => [p.id, p])),
+    [cartProducts]
+  );
+  const lineProduct = (l: CartItem) => productById.get(l.productId);
   const setQty = useCart((s) => s.setQty);
   const removeItem = useCart((s) => s.remove);
   const addItem = useCart((s) => s.add);
@@ -39,7 +47,7 @@ function CartPage() {
   const total = subtotal - discount;
 
   const sizeOptions = (l: CartItem) => {
-    const product = getProductById(l.productId);
+    const product = lineProduct(l);
     if (!product || product.sizes.length === 0) return [{ value: l.size!, label: l.size!, soldOut: false }];
     const availability = getSizeAvailability(product);
     return product.sizes.map((s) => ({
@@ -50,7 +58,7 @@ function CartPage() {
   };
 
   const lineSoldOut = (l: CartItem) => {
-    const product = getProductById(l.productId);
+    const product = lineProduct(l);
     if (!product) return false;
     if (isOutOfStock(product)) return true;
     if (!l.size) return false;
@@ -138,7 +146,7 @@ function CartPage() {
               <div className="mt-4 divide-y divide-border border-y border-border">
                 {lines.map((l) => {
                   const soldOut = lineSoldOut(l);
-                  const brand = getProductById(l.productId)?.brand;
+                  const brand = lineProduct(l)?.brand;
                   return (
                   <div key={l.id} className="flex items-start gap-3 md:gap-4 py-2 md:py-3 min-w-0">
                     <img src={l.image} alt={l.name} className={`h-12 w-12 md:h-[72px] md:w-[72px] rounded-md object-contain bg-[#f2f2f2] shrink-0 ${soldOut ? "opacity-50 grayscale" : ""}`} />

@@ -3,12 +3,12 @@ import { motion } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { ProductCard } from "@/components/shop/ProductCard";
-import { getProductsByCategory } from "@/lib/shop-data";
 import { fadeInUp } from "@/lib/motion";
+import { useStoreProducts } from "@/lib/catalog-query";
 
 export function TrendingCarousel({ limit = 10 }: { limit?: number }) {
   const scroller = useRef<HTMLDivElement>(null);
-  const products = getProductsByCategory("trending").slice(0, limit);
+  const { products } = useStoreProducts({ preset: "trending", pageSize: limit });
 
   const scrollBy = (dir: 1 | -1) => {
     const el = scroller.current;
@@ -56,14 +56,11 @@ export function TrendingCarousel({ limit = 10 }: { limit?: number }) {
 
         <div
           ref={scroller}
-          className="flex gap-2.5 md:gap-4 overflow-x-auto no-scrollbar snap-x snap-mandatory pb-2"
+          className="flex gap-2 md:gap-4 overflow-x-auto no-scrollbar snap-x snap-mandatory pb-2"
         >
           {products.map((p) => (
-            <div
-              key={p.id}
-              className="snap-start shrink-0 w-[42%] sm:w-[32%] md:w-[23%] lg:w-[18%]"
-            >
-              <ProductCard product={p} trendingBadge />
+            <div key={p.id} className="snap-start shrink-0 w-[42%] sm:w-[28%] md:w-[18%]">
+              <ProductCard product={p} />
             </div>
           ))}
         </div>

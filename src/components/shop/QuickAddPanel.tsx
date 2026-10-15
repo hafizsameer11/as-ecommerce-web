@@ -5,7 +5,9 @@ import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { useQuickAdd } from "@/lib/quick-add-store";
 import { useCart } from "@/lib/cart-store";
-import { formatNaira, getProductById, getProductSizeLabel, getSaleInfo, getSizeAvailability } from "@/lib/shop-data";
+import { formatNaira, getProductSizeLabel, getSaleInfo, getSizeAvailability } from "@/lib/shop-data";
+import { useProduct } from "@/lib/catalog-product-cache";
+
 export function QuickAddPanel() {
   const productId = useQuickAdd((s) => s.productId);
   const close = useQuickAdd((s) => s.close);
@@ -20,7 +22,7 @@ export function QuickAddPanel() {
     return () => window.removeEventListener("resize", check);
   }, []);
 
-  const product = productId ? getProductById(productId) : undefined;
+  const { product } = useProduct(productId);
   const availability = useMemo(() => (product ? getSizeAvailability(product) : {}), [product]);
 
   const [size, setSize] = useState<string | null>(null);

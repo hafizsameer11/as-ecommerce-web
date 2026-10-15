@@ -3,14 +3,36 @@ import { motion, AnimatePresence } from "framer-motion";
 import { heroSlides } from "@/lib/mock-data";
 import { buttonTap } from "@/lib/motion";
 import { Link } from "@tanstack/react-router";
+import { useCatalogVersion } from "@/lib/catalog-version";
 
 export function HeroCarousel({ compact = false, fullScreen = false }: { compact?: boolean; fullScreen?: boolean }) {
+  const catalogV = useCatalogVersion((s) => s.v);
+  void catalogV;
   const [i, setI] = useState(0);
+  const count = heroSlides.length;
+
   useEffect(() => {
-    const id = setInterval(() => setI((v) => (v + 1) % heroSlides.length), 5500);
+    if (count === 0) return;
+    const id = setInterval(() => setI((v) => (v + 1) % count), 5500);
     return () => clearInterval(id);
-  }, []);
-  const slide = heroSlides[i];
+  }, [count]);
+
+  if (count === 0) {
+    return (
+      <div
+        className={`relative overflow-hidden bg-ink ${
+          fullScreen
+            ? "aspect-square md:aspect-auto md:h-[70vh] rounded-none"
+            : compact
+              ? "h-[230px] md:h-[320px] rounded-xl"
+              : "h-[420px] md:h-[560px] rounded-xl"
+        }`}
+        aria-hidden
+      />
+    );
+  }
+
+  const slide = heroSlides[i]!;
 
   return (
     <div

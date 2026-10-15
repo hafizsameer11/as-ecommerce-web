@@ -1,33 +1,7 @@
 import { useEffect, useState } from "react";
 import { catalogApi } from "@/lib/api/catalog";
 import { mapApiProduct, rememberApiMeta } from "@/lib/api/product-mapper";
-import { shopProducts, type Product } from "./shop-data";
-
-/** Local fallback while /store/search is unavailable. */
-export function searchProductsLocal(query: string): Product[] {
-  const q = query.trim().toLowerCase();
-  if (!q) return [];
-  const tokens = q.split(/\s+/).filter(Boolean);
-  return shopProducts
-    .map((p) => {
-      const hay = `${p.brand} ${p.name} ${p.category} ${p.subcategory ?? ""}`.toLowerCase();
-      let score = 0;
-      for (const t of tokens) {
-        if (hay.includes(t)) score += 1;
-        if (p.brand.toLowerCase().includes(t)) score += 2;
-        if (p.name.toLowerCase().startsWith(t)) score += 3;
-      }
-      return { p, score };
-    })
-    .filter((x) => x.score > 0)
-    .sort((a, b) => b.score - a.score)
-    .map((x) => x.p);
-}
-
-/** @deprecated Prefer useSearchProducts — kept for sync call sites during transition. */
-export function searchProducts(query: string): Product[] {
-  return searchProductsLocal(query);
-}
+import type { Product } from "./shop-data";
 
 export async function searchProductsApi(query: string, limit = 48): Promise<Product[]> {
   const q = query.trim();
@@ -40,37 +14,56 @@ export async function searchProductsApi(query: string, limit = 48): Promise<Prod
     });
   } catch (err) {
     console.warn("[search]", err);
-    return searchProductsLocal(q);
+    return [];
   }
+}
+
+/** @deprecated Use searchProductsApi or useSearchProducts. */
+export function searchProducts(_query: string): Product[] {
+  return [];
 }
 
 export function useSearchProducts(query: string, limit = 48) {
   const [results, setResults] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
-  const [fromApi, setFromApi] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const q = query.trim();
     if (!q) {
       setResults([]);
-      setFromApi(false);
+      setError(null);
       setLoading(false);
       return;
     }
     let cancelled = false;
     setLoading(true);
-    searchProductsApi(q, limit).then((items) => {
-      if (cancelled) return;
-      setResults(items);
-      setFromApi(true);
-      setLoading(false);
-    });
+    setError(null);
+    catalogApi
+      .search(q, limit)
+      .then((res) => {
+        if (cancelled) return;
+        setResults(
+          (res.products ?? []).map((p) => {
+            rememberApiMeta(p);
+            return mapApiProduct(p);
+          })
+        );
+        setLoading(false);
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        console.warn("[search]", err);
+        setResults([]);
+        setError(err instanceof Error ? err.message : "Search failed");
+        setLoading(false);
+      });
     return () => {
       cancelled = true;
     };
   }, [query, limit]);
 
-  return { results, loading, fromApi };
+  return { results, loading, error };
 }
 
 export function usePopularSearches() {

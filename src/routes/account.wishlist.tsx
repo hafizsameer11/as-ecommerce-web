@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Toaster } from "sonner";
 import { ArrowLeft, Heart } from "lucide-react";
@@ -7,9 +7,12 @@ import { useIsDesktop } from "@/hooks/use-breakpoint";
 import { DesktopShell } from "@/components/shell/DesktopShell";
 import { MobileShell } from "@/components/shell/MobileShell";
 import { AccountSidebar } from "@/components/account/AccountSidebar";
-import { shopProducts, isOnSale, getProductSizeLabel, type Product } from "@/lib/shop-data";
+import { isOnSale, getProductSizeLabel, type Product } from "@/lib/shop-data";
 import { useWishlist, type WishlistVariation } from "@/lib/wishlist";
 import { ProductCard } from "@/components/shop/ProductCard";
+import { useProductsByIds } from "@/lib/catalog-product-cache";
+import { catalogApi } from "@/lib/api/catalog";
+import { mapApiProduct, rememberApiMeta } from "@/lib/api/product-mapper";
 
 import { fadeInUp } from "@/lib/motion";
 
@@ -28,9 +31,12 @@ export const Route = createFileRoute("/account/wishlist")({
 function useWishlistProducts(): { product: Product; variation?: WishlistVariation }[] {
   const ids = useWishlist((s) => s.ids);
   const variations = useWishlist((s) => s.variations);
+  const idList = [...ids];
+  const { products } = useProductsByIds(idList);
+  const byId = new Map(products.map((p) => [p.id, p]));
   const out: { product: Product; variation?: WishlistVariation }[] = [];
   for (const id of ids) {
-    const product = shopProducts.find((p) => p.id === id);
+    const product = byId.get(id);
     if (product) out.push({ product, variation: variations[id] });
   }
   return out;
@@ -152,8 +158,31 @@ function Desktop() {
 }
 
 function YouMayAlsoLike({ items, layout }: { items: Product[]; layout: "grid" | "scroll" }) {
-  const wishIds = new Set(items.map((p) => p.id));
-  const suggestions = shopProducts.filter((p) => !wishIds.has(p.id)).slice(0, layout === "grid" ? 4 : 8);
+  const [suggestions, setSuggestions] = useState<Product[]>([]);
+  const limit = layout === "grid" ? 4 : 8;
+
+  useEffect(() => {
+    let cancelled = false;
+    const exclude = items.map((p) => p.id);
+    catalogApi
+      .alsoLike(exclude, limit)
+      .then((rows) => {
+        if (cancelled) return;
+        setSuggestions(
+          (rows ?? []).map((p) => {
+            rememberApiMeta(p);
+            return mapApiProduct(p);
+          })
+        );
+      })
+      .catch(() => {
+        if (!cancelled) setSuggestions([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [items.map((p) => p.id).join(","), limit]);
+
   if (suggestions.length === 0) return null;
 
   if (layout === "grid") {

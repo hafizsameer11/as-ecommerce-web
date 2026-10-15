@@ -11,7 +11,7 @@ import { StrokeRosetteCheckIcon } from "@/components/home/TrustIcons";
 import { staggerContainer, staggerItem, cardHover, imageZoom, buttonTap, fadeInUp } from "@/lib/motion";
 import { PromoBanner } from "@/components/home/PromoBanner";
 import { ProductCard } from "@/components/shop/ProductCard";
-import { getAllProducts, isConciergeProduct } from "@/lib/shop-data";
+import { useStoreProducts } from "@/lib/catalog-query";
 import { ConciergeEditRails } from "@/components/concierge/ConciergeEditRails";
 import heroImg from "@/assets/concierge-hero.jpg";
 import editBanner from "@/assets/cat-clothing.jpg";
@@ -54,9 +54,7 @@ const requestCats = [
 
 export function MobileCategories() {
   const navigate = useNavigate();
-  const all = getAllProducts();
-  const conciergePicks = all.filter(isConciergeProduct);
-  const privateSourcing = (conciergePicks.length >= 4 ? conciergePicks : all).slice(0, 8);
+  const { products: privateSourcing } = useStoreProducts({ concierge: true, pageSize: 8, sort: "featured" });
   return (
     <MobileShell headerVariant="shop" showTopTabs={false} bottomVariant="product" activeBottom="shop">
       <div className="bg-background pb-4">

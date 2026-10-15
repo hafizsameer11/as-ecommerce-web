@@ -24,13 +24,9 @@ export function getConciergeCategory(id: string) {
   return conciergeCategories.find((c) => c.id === id);
 }
 
-/** Products that can be sourced within a concierge category. Never returns empty. */
+/** Products that can be sourced within a concierge category (hydrated catalog only). */
 export function getConciergeProducts(id: string): Product[] {
   const all = getAllProducts();
   const match = matchers[id];
-  const picked = match ? all.filter(match) : [];
-  if (picked.length >= 4) return picked;
-  // Deterministic fallback so every category has browsable pieces.
-  const extras = all.filter((p) => !picked.includes(p)).slice(0, 8 - picked.length);
-  return [...picked, ...extras];
+  return match ? all.filter(match) : [];
 }
