@@ -93,15 +93,22 @@ export async function hydrateShopCatalogFromApi() {
       replaceArray(newArrivals as { id: string; brand: string; name: string; price: number; image: string }[], na.map(toTeaser));
 
       if (home.hero?.length) {
+        const seen = new Set<string>();
         replaceArray(
           heroSlides,
-          home.hero.map((h, i) => ({
-            id: i + 1,
-            tag: h.eyebrow ?? "NEW",
-            title: h.headline ?? "",
-            copy: h.subhead ?? "",
-            image: h.imageUrl || FALLBACK_HERO[i % FALLBACK_HERO.length]!.image,
-          }))
+          home.hero.map((h, i) => {
+            const fallback = FALLBACK_HERO[i % FALLBACK_HERO.length]!.image;
+            let image = h.imageUrl || fallback;
+            if (h.imageUrl && seen.has(h.imageUrl)) image = fallback;
+            if (h.imageUrl) seen.add(h.imageUrl);
+            return {
+              id: i + 1,
+              tag: h.eyebrow ?? "NEW",
+              title: h.headline ?? "",
+              copy: h.subhead ?? "",
+              image,
+            };
+          })
         );
       } else if (heroSlides.length === 0) {
         replaceArray(heroSlides, FALLBACK_HERO);

@@ -29,11 +29,13 @@ export function DesktopHome() {
     return subscribeDrops(() => tick((n) => n + 1));
   }, []);
   const nextDrop = getDrops()[0];
-  const { data: publicSettings } = usePublicSettings();
+  const { data: publicSettings, isLoading: settingsLoading } = usePublicSettings();
   const depositPct = nextDrop?.depositPct ?? defaultDepositPct(publicSettings);
-  const depositFallback = nextDrop
-    ? `${nextDrop.product.brand} ${nextDrop.product.name} lands ${formatDropDate(nextDrop.releaseAt)}. Secure your size with a ${depositPct}% deposit.`
-    : `Secure upcoming drops with a ${depositPct}% deposit. Balance payable on release day.`;
+  const depositFallback = settingsLoading
+    ? "Secure upcoming drops with a deposit. Balance payable on release day."
+    : nextDrop
+      ? `${nextDrop.product.brand} ${nextDrop.product.name} lands ${formatDropDate(nextDrop.releaseAt)}. Secure your size with a ${depositPct}% deposit.`
+      : `Secure upcoming drops with a ${depositPct}% deposit. Balance payable on release day.`;
   const hasComingSoonSlot = homeSlots.some(isComingSoonSlot);
   const heroCollection = homeCollections.hero[0];
   const row1 = homeCollections.row1[0];

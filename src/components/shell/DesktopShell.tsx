@@ -61,6 +61,8 @@ export function DesktopShell({
   const { data: publicSettings } = usePublicSettings();
   const contact = storeProfileContact(publicSettings);
   const [email, setEmail] = useState("");
+  const [newsletterDone, setNewsletterDone] = useState(false);
+  const [newsletterBusy, setNewsletterBusy] = useState(false);
   const [shopOpen, setShopOpen] = useState(false);
   const [drawer, setDrawer] = useState(false);
   const [drawerShopOpen, setDrawerShopOpen] = useState(false);
@@ -462,15 +464,24 @@ export function DesktopShell({
               </p>
             </div>
             <div className="flex flex-col justify-end">
+              {newsletterDone ? (
+                <p className="border-b border-gold/40 py-4 text-xs tracking-widest uppercase text-gold">
+                  You're subscribed — welcome to the Collective.
+                </p>
+              ) : (
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
+                  if (newsletterBusy) return;
+                  setNewsletterBusy(true);
                   void subscribeNewsletter(email)
                     .then(() => {
                       toast.success("You're subscribed to ASL ORIGINALS updates");
                       setEmail("");
+                      setNewsletterDone(true);
                     })
-                    .catch((err) => toast.error(err instanceof Error ? err.message : "Could not subscribe"));
+                    .catch((err) => toast.error(err instanceof Error ? err.message : "Could not subscribe"))
+                    .finally(() => setNewsletterBusy(false));
                 }}
                 className="relative w-full"
               >
@@ -480,14 +491,18 @@ export function DesktopShell({
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="EMAIL ADDRESS"
-                  className="w-full bg-transparent border-b border-paper/30 py-4 pr-28 text-xs tracking-widest uppercase text-paper outline-none focus:border-gold transition-colors placeholder:text-paper/25"
+                  disabled={newsletterBusy}
+                  className="w-full bg-transparent border-b border-paper/30 py-4 pr-28 text-xs tracking-widest uppercase text-paper outline-none focus:border-gold transition-colors placeholder:text-paper/25 disabled:opacity-60"
                 />
                 <button
                   type="submit"
-                  className="absolute right-0 bottom-4 text-gold text-[10px] font-bold tracking-widest hover:text-paper transition-colors"
+                  disabled={newsletterBusy}
+                  className="absolute right-0 bottom-4 text-gold text-[10px] font-bold tracking-widest hover:text-paper transition-colors disabled:opacity-60"
                 >
-                  SUBSCRIBE - </button>
+                  {newsletterBusy ? "SENDING…" : "SUBSCRIBE - "}
+                </button>
               </form>
+              )}
               <p className="mt-4 text-[10px] leading-[1.9] text-paper/40">
                 By subscribing, you agree to receive updates, exclusive offers, and promotional messages from ASL ORIGINALS. You can unsubscribe at any time. Please read our{" "}
                 <Link to="/customer-care/privacy-policy" className="underline underline-offset-2 hover:text-gold transition-colors">

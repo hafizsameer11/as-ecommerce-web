@@ -20,7 +20,7 @@ export function DesktopSearch() {
   const { recents, add, clear, removeOne } = useRecentSearches();
   const apiPopular = usePopularSearches();
   const popularSearches = apiPopular.length ? apiPopular : fallbackPopular;
-  const { results } = useSearchProducts(q);
+  const { results, loading } = useSearchProducts(q);
 
   useEffect(() => {
     const t = setTimeout(() => inputRef.current?.focus(), 200);
@@ -74,13 +74,25 @@ export function DesktopSearch() {
           <section className="mt-10">
             <div className="flex items-center justify-between mb-6">
               <h2 className="font-display text-xl font-bold">
-                {results.length} results for "<span className="text-gold">{q}</span>"
+                {loading ? (
+                  <>Searching for "<span className="text-gold">{q}</span>"…</>
+                ) : (
+                  <>
+                    {results.length} results for "<span className="text-gold">{q}</span>"
+                  </>
+                )}
               </h2>
               <button className="inline-flex items-center gap-2 text-[13px] font-semibold text-ink">
                 <SlidersHorizontal className="h-4 w-4" /> Filter
               </button>
             </div>
-            {results.length === 0 ? (
+            {loading ? (
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                {Array.from({ length: 8 }).map((_, i) => (
+                  <div key={i} className="aspect-[3/4] animate-pulse rounded-lg bg-muted" />
+                ))}
+              </div>
+            ) : results.length === 0 ? (
               <div className="rounded-lg border border-border bg-white p-6 text-center text-sm text-muted-foreground">
                 No products match "{q}". Try a different keyword.
                 <div className="mt-4">

@@ -23,11 +23,13 @@ import { Route as ConciergeServiceRouteImport } from './routes/concierge-service
 import { Route as CustomerCareRouteImport } from './routes/customer-care'
 import { Route as FaqRouteImport } from './routes/faq'
 import { Route as HowItWorksRouteImport } from './routes/how-it-works'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as NewArrivalsRouteImport } from './routes/new-arrivals'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as ShopRouteImport } from './routes/shop'
+import { Route as SignInRouteImport } from './routes/sign-in'
 import { Route as SplashRouteImport } from './routes/splash'
 import { Route as StartRequestRouteImport } from './routes/start-request'
 import { Route as TrackRequestRouteImport } from './routes/track-request'
@@ -178,6 +180,11 @@ const HowItWorksRoute = HowItWorksRouteImport.update({
   path: '/how-it-works',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const NewArrivalsRoute = NewArrivalsRouteImport.update({
   id: '/new-arrivals',
   path: '/new-arrivals',
@@ -201,6 +208,11 @@ const SearchRoute = SearchRouteImport.update({
 const ShopRoute = ShopRouteImport.update({
   id: '/shop',
   path: '/shop',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SignInRoute = SignInRouteImport.update({
+  id: '/sign-in',
+  path: '/sign-in',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SplashRoute = SplashRouteImport.update({
@@ -627,11 +639,13 @@ export interface FileRoutesByFullPath {
   '/customer-care': typeof CustomerCareRouteWithChildren
   '/faq': typeof FaqRoute
   '/how-it-works': typeof HowItWorksRoute
+  '/login': typeof LoginRoute
   '/new-arrivals': typeof NewArrivalsRoute
   '/onboarding': typeof OnboardingRoute
   '/reset-password': typeof ResetPasswordRoute
   '/search': typeof SearchRoute
   '/shop': typeof ShopRouteWithChildren
+  '/sign-in': typeof SignInRoute
   '/splash': typeof SplashRoute
   '/start-request': typeof StartRequestRoute
   '/track-request': typeof TrackRequestRoute
@@ -725,10 +739,12 @@ export interface FileRoutesByTo {
   '/concierge-service': typeof ConciergeServiceRoute
   '/faq': typeof FaqRoute
   '/how-it-works': typeof HowItWorksRoute
+  '/login': typeof LoginRoute
   '/new-arrivals': typeof NewArrivalsRoute
   '/onboarding': typeof OnboardingRoute
   '/reset-password': typeof ResetPasswordRoute
   '/search': typeof SearchRoute
+  '/sign-in': typeof SignInRoute
   '/splash': typeof SplashRoute
   '/start-request': typeof StartRequestRoute
   '/track-request': typeof TrackRequestRoute
@@ -817,11 +833,13 @@ export interface FileRoutesById {
   '/customer-care': typeof CustomerCareRouteWithChildren
   '/faq': typeof FaqRoute
   '/how-it-works': typeof HowItWorksRoute
+  '/login': typeof LoginRoute
   '/new-arrivals': typeof NewArrivalsRoute
   '/onboarding': typeof OnboardingRoute
   '/reset-password': typeof ResetPasswordRoute
   '/search': typeof SearchRoute
   '/shop': typeof ShopRouteWithChildren
+  '/sign-in': typeof SignInRoute
   '/splash': typeof SplashRoute
   '/start-request': typeof StartRequestRoute
   '/track-request': typeof TrackRequestRoute
@@ -919,11 +937,13 @@ export interface FileRouteTypes {
     | '/customer-care'
     | '/faq'
     | '/how-it-works'
+    | '/login'
     | '/new-arrivals'
     | '/onboarding'
     | '/reset-password'
     | '/search'
     | '/shop'
+    | '/sign-in'
     | '/splash'
     | '/start-request'
     | '/track-request'
@@ -1017,10 +1037,12 @@ export interface FileRouteTypes {
     | '/concierge-service'
     | '/faq'
     | '/how-it-works'
+    | '/login'
     | '/new-arrivals'
     | '/onboarding'
     | '/reset-password'
     | '/search'
+    | '/sign-in'
     | '/splash'
     | '/start-request'
     | '/track-request'
@@ -1108,11 +1130,13 @@ export interface FileRouteTypes {
     | '/customer-care'
     | '/faq'
     | '/how-it-works'
+    | '/login'
     | '/new-arrivals'
     | '/onboarding'
     | '/reset-password'
     | '/search'
     | '/shop'
+    | '/sign-in'
     | '/splash'
     | '/start-request'
     | '/track-request'
@@ -1209,11 +1233,13 @@ export interface RootRouteChildren {
   CustomerCareRoute: typeof CustomerCareRouteWithChildren
   FaqRoute: typeof FaqRoute
   HowItWorksRoute: typeof HowItWorksRoute
+  LoginRoute: typeof LoginRoute
   NewArrivalsRoute: typeof NewArrivalsRoute
   OnboardingRoute: typeof OnboardingRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SearchRoute: typeof SearchRoute
   ShopRoute: typeof ShopRouteWithChildren
+  SignInRoute: typeof SignInRoute
   SplashRoute: typeof SplashRoute
   StartRequestRoute: typeof StartRequestRoute
   TrackRequestRoute: typeof TrackRequestRoute
@@ -1327,6 +1353,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof HowItWorksRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/new-arrivals': {
       id: '/new-arrivals'
       path: '/new-arrivals'
@@ -1360,6 +1393,13 @@ declare module '@tanstack/react-router' {
       path: '/shop'
       fullPath: '/shop'
       preLoaderRoute: typeof ShopRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sign-in': {
+      id: '/sign-in'
+      path: '/sign-in'
+      fullPath: '/sign-in'
+      preLoaderRoute: typeof SignInRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/splash': {
@@ -2204,11 +2244,13 @@ const rootRouteChildren: RootRouteChildren = {
   CustomerCareRoute: CustomerCareRouteWithChildren,
   FaqRoute: FaqRoute,
   HowItWorksRoute: HowItWorksRoute,
+  LoginRoute: LoginRoute,
   NewArrivalsRoute: NewArrivalsRoute,
   OnboardingRoute: OnboardingRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SearchRoute: SearchRoute,
   ShopRoute: ShopRouteWithChildren,
+  SignInRoute: SignInRoute,
   SplashRoute: SplashRoute,
   StartRequestRoute: StartRequestRoute,
   TrackRequestRoute: TrackRequestRoute,
@@ -2224,13 +2266,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

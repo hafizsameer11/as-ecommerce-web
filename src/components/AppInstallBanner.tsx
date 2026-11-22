@@ -60,9 +60,9 @@ export function AppInstallBanner() {
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 80, opacity: 0 }}
           transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-          className="fixed bottom-20 left-0 right-0 z-[120] px-3 md:bottom-4"
+          className="pointer-events-none fixed bottom-20 left-0 right-0 z-[120] px-3 md:bottom-4"
         >
-          <div className="mx-auto flex max-w-xl items-center gap-3 rounded-xl bg-ink px-3 py-2.5 shadow-[0_16px_40px_-16px_rgba(0,0,0,0.7)]">
+          <div className="pointer-events-auto mx-auto flex max-w-xl items-center gap-3 rounded-xl bg-ink px-3 py-2.5 shadow-[0_16px_40px_-16px_rgba(0,0,0,0.7)]">
             <div className="grid h-11 w-11 shrink-0 place-items-center overflow-hidden rounded-full border-[0.5px] border-paper/50 bg-ink">
               <img src={emblem} alt="ASL ORIGINALS" className="max-h-full max-w-full object-contain" />
             </div>

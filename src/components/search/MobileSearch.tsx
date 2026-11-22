@@ -26,7 +26,7 @@ export function MobileSearch() {
 
   const popularSearches = usePopularSearches();
   const popular = popularSearches.length ? popularSearches : fallbackPopular;
-  const { results: rawResults } = useSearchProducts(q);
+  const { results: rawResults, loading } = useSearchProducts(q);
   const results = rawResults.filter((p) => {
     if (filters.categories.length && !filters.categories.includes(p.category)) return false;
     if (filters.brands.length && !filters.brands.includes(p.brand)) return false;
@@ -103,7 +103,7 @@ export function MobileSearch() {
       </div>
 
       {q ? (
-        <ResultsMobile query={q} results={results} onOpenFilter={() => setFilterOpen(true)} />
+        <ResultsMobile query={q} results={results} loading={loading} onOpenFilter={() => setFilterOpen(true)} />
       ) : (
         <EmptyMobile
           onSelect={(s) => { setQuery(s); submit(s); }}
@@ -152,18 +152,40 @@ export function MobileSearch() {
 }
 
 
-function ResultsMobile({ query, results, onOpenFilter }: { query: string; results: import("@/lib/shop-data").Product[]; onOpenFilter: () => void }) {
+function ResultsMobile({
+  query,
+  results,
+  loading,
+  onOpenFilter,
+}: {
+  query: string;
+  results: import("@/lib/shop-data").Product[];
+  loading?: boolean;
+  onOpenFilter: () => void;
+}) {
   return (
     <section className="px-3 pt-4 pb-8">
       <div className="flex items-center justify-between mb-3">
         <div className="text-[12px] text-muted-foreground">
-          <span className="font-semibold text-ink">{results.length}</span> results for "<span className="font-semibold text-ink">{query}</span>"
+          {loading ? (
+            <>Searching for "<span className="font-semibold text-ink">{query}</span>"…</>
+          ) : (
+            <>
+              <span className="font-semibold text-ink">{results.length}</span> results for "<span className="font-semibold text-ink">{query}</span>"
+            </>
+          )}
         </div>
         <button onClick={onOpenFilter} className="inline-flex items-center gap-1 text-[11px] font-semibold text-ink">
           <SlidersHorizontal className="h-3.5 w-3.5" /> Filter
         </button>
       </div>
-      {results.length === 0 ? (
+      {loading ? (
+        <div className="grid grid-cols-2 gap-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="aspect-[3/4] animate-pulse rounded-md bg-muted" />
+          ))}
+        </div>
+      ) : results.length === 0 ? (
         <div className="rounded-md border border-border bg-white p-6 text-center text-[13px] text-muted-foreground">
           No products match "{query}". Try a different keyword.
           <div className="mt-3">
