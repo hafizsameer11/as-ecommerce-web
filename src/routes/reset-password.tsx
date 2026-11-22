@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { Lock, ArrowRight } from "lucide-react";
@@ -29,6 +29,19 @@ function ResetPasswordPage() {
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [busy, setBusy] = useState(false);
+
+  // On phones, try opening the native app deep link once (falls through to this web form).
+  useEffect(() => {
+    if (!token || token.length < 20 || typeof window === "undefined") return;
+    const ua = navigator.userAgent || "";
+    const mobile = /Android|iPhone|iPad|iPod/i.test(ua);
+    if (!mobile) return;
+    const appUrl = `asloriginals://reset-password?token=${encodeURIComponent(token)}`;
+    const t = window.setTimeout(() => {
+      window.location.href = appUrl;
+    }, 400);
+    return () => window.clearTimeout(t);
+  }, [token]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
