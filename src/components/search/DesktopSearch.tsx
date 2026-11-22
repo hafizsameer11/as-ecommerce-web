@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { getRouteApi, Link, useNavigate } from "@tanstack/react-router";
 import { Search, X, Mic, Wand2, Clock, TrendingUp, ArrowUpRight, Trash2, SlidersHorizontal } from "lucide-react";
-import { toast } from "sonner";
+import { useVoiceSearch } from "@/lib/use-voice-search";
 import { DesktopShell } from "@/components/shell/DesktopShell";
 import { ProductCard } from "@/components/shop/ProductCard";
 import { staggerContainer, staggerItem } from "@/lib/motion";
@@ -36,6 +36,11 @@ export function DesktopSearch() {
     navigate({ to: "/search", search: { q: val.trim() } });
   };
 
+  const voice = useVoiceSearch((text) => {
+    setQuery(text);
+    submit(text);
+  });
+
   return (
     <DesktopShell>
       <div className="mx-auto max-w-6xl px-6 py-10">
@@ -56,14 +61,9 @@ export function DesktopSearch() {
               </button>
             )}
             <button
-              onClick={() => {
-                toast("Listening…");
-                const phrases = ["White sneakers", "Black hoodie", "Luxury watch", "Men's fragrance", "Amiri slides"];
-                const phrase = phrases[Math.floor(Math.random() * phrases.length)];
-                setTimeout(() => submit(phrase), 1400);
-              }}
-              aria-label="Voice search"
-              className="grid place-items-center h-11 w-11 rounded-full border border-border text-foreground hover:bg-muted"
+              onClick={voice.start}
+              aria-label={voice.listening ? "Stop voice search" : "Voice search"}
+              className={`grid place-items-center h-11 w-11 rounded-full border border-border hover:bg-muted ${voice.listening ? "bg-ink text-white animate-pulse" : "text-foreground"}`}
             >
               <Mic className="h-5 w-5" strokeWidth={1.8} />
             </button>

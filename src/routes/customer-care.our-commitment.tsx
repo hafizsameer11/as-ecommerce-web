@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Award, Diamond, Users, Lock, Truck, FileCheck, TrendingUp, Star, ShoppingBag, ShieldCheck, Headphones, Sparkles } from "lucide-react";
 import { CustomerCareScaffold } from "@/components/customer-care/CustomerCareScaffold";
+import { CmsOrStatic } from "@/components/customer-care/CmsOrStatic";
 import heroImg from "@/assets/care-legal.jpg";
 
 export const Route = createFileRoute("/customer-care/our-commitment")({
@@ -40,6 +41,7 @@ function OurCommitment() {
       title="Our Commitment"
       subtitle="At ASL ORIGINALS, every decision we make is guided by our commitment to authenticity, quality, transparency, and customer satisfaction."
     >
+      <CmsOrStatic slug="customer-care/our-commitment">
       <p className="text-[12.5px] text-foreground/75 leading-relaxed -mt-2">
         We believe shopping for premium fashion should be simple, secure, and trustworthy. From the moment you browse our collections until your order arrives, our goal is to provide an exceptional experience.
       </p>
@@ -89,6 +91,7 @@ function OurCommitment() {
           </p>
         </div>
       </div>
+      </CmsOrStatic>
     </CustomerCareScaffold>
   );
 }

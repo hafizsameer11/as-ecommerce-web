@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate, getRouteApi, Link } from "@tanstack/react-router";
 import { Search, X, Mic, Wand2, Clock, TrendingUp, ArrowUpRight, Trash2, SlidersHorizontal } from "lucide-react";
-import { toast } from "sonner";
+import { useVoiceSearch } from "@/lib/use-voice-search";
 import { MobileShell } from "@/components/shell/MobileShell";
 import { ProductCard } from "@/components/shop/ProductCard";
 import { ProductFilters, defaultFilters, type FilterState } from "@/components/shop/ProductFilters";
@@ -15,15 +15,6 @@ import { useRecentSearches } from "@/lib/recent-searches";
 
 
 const routeApi = getRouteApi("/search");
-
-const voicePhrases = [
-  "White sneakers",
-  "Black hoodie",
-  "Luxury watch",
-  "Men's fragrance",
-  "Amiri slides",
-  "Designer sunglasses",
-];
 
 export function MobileSearch() {
   const { q } = routeApi.useSearch();
@@ -66,11 +57,11 @@ export function MobileSearch() {
     navigate({ to: "/search", search: { q: val.trim() } });
   };
 
-  const startVoice = () => {
-    toast("Listening…");
-    const phrase = voicePhrases[Math.floor(Math.random() * voicePhrases.length)];
-    setTimeout(() => submit(phrase), 1400);
-  };
+  const voice = useVoiceSearch((text) => {
+    setQuery(text);
+    submit(text);
+  });
+  const startVoice = voice.start;
 
   return (
     <MobileShell activeBottom="search" showTopTabs={false} headerVariant="shop">

@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ShoppingBag, ShoppingCart, ClipboardList, CreditCard, PackageOpen, Truck, CheckCircle2, ShieldCheck } from "lucide-react";
 import { CustomerCareScaffold } from "@/components/customer-care/CustomerCareScaffold";
+import { CmsOrStatic } from "@/components/customer-care/CmsOrStatic";
 
 export const Route = createFileRoute("/customer-care/how-it-works")({
   head: () => ({
@@ -29,6 +30,7 @@ function HowItWorks() {
       title="How It Works"
       subtitle="Shopping with ASL ORIGINALS is simple, secure, and designed for you."
     >
+      <CmsOrStatic slug="customer-care/how-it-works">
       <p className="text-[13px] text-foreground/75 leading-relaxed">Follow these simple steps from browsing to delivery.</p>
 
       <ol className="space-y-4">
@@ -60,6 +62,7 @@ function HowItWorks() {
         <Link to="/shop" className="inline-flex items-center h-10 px-5 rounded bg-ink text-white text-[12.5px] font-semibold">Start Shopping</Link>
         <Link to="/customer-care/faqs" className="inline-flex items-center h-10 px-5 rounded border border-ink text-ink text-[12.5px] font-semibold">Read FAQs</Link>
       </div>
+      </CmsOrStatic>
     </CustomerCareScaffold>
   );
 }

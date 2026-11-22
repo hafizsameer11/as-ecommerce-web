@@ -3,6 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { HelpCircle, BarChart3, Settings2, Megaphone, ListChecks, Building2, Pencil, Phone, Mail, MapPin, Cookie } from "lucide-react";
 import { CustomerCareScaffold } from "@/components/customer-care/CustomerCareScaffold";
+import { CmsOrStatic } from "@/components/customer-care/CmsOrStatic";
 import { getCookieConsent, saveCookieConsent } from "@/lib/cookie-consent";
 
 export const Route = createFileRoute("/customer-care/cookie-policy")({
@@ -41,6 +42,7 @@ function CookiePolicy() {
       title="Cookie Policy"
       subtitle="This Cookie Policy explains how ASL ORIGINALS uses cookies and similar technologies when you visit our website."
     >
+      <CmsOrStatic slug="customer-care/cookie-policy">
       <div className="space-y-5">
         {sections.map((s) => (
           <div key={s.title} className="flex gap-4">
@@ -75,6 +77,7 @@ function CookiePolicy() {
         <Row Icon={Phone} label="Phone / WhatsApp" value="+234 810 123 4567" />
         <Row Icon={MapPin} label="Address" value="Lekki Phase 1, Lagos, Nigeria" />
       </div>
+      </CmsOrStatic>
 
       <div className="rounded-md border border-border bg-muted/40 p-4 flex flex-col sm:flex-row items-start sm:items-center gap-4 justify-between">
         <div className="flex items-center gap-3">

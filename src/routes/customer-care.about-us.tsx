@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ShieldCheck, Star, ShoppingBag, Package, Globe2, ArrowDown, ArrowRight, Check } from "lucide-react";
 import { CustomerCareScaffold } from "@/components/customer-care/CustomerCareScaffold";
+import { CmsOrStatic } from "@/components/customer-care/CmsOrStatic";
 import storyImg from "@/assets/about-story.jpg";
 import missionImg from "@/assets/about-mission.jpg";
 
@@ -69,6 +70,7 @@ function AboutUs() {
       showHero={false}
       showSidebar={false}
     >
+      <CmsOrStatic slug="customer-care/about-us" showTitle>
       {/* Editorial hero */}
       <section className="relative overflow-hidden rounded-xl bg-ink text-white min-h-[360px] md:min-h-[520px] flex items-center">
         <img
@@ -210,6 +212,7 @@ function AboutUs() {
           ))}
         </ul>
       </section>
+      </CmsOrStatic>
     </CustomerCareScaffold>
   );
 }

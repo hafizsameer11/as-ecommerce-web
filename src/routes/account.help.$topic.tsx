@@ -4,6 +4,8 @@ import { motion } from "framer-motion";
 import { ChevronRight } from "lucide-react";
 import { AccountInnerScaffold } from "@/components/account/AccountInnerScaffold";
 import { fadeInUp } from "@/lib/motion";
+import { useStorePage, type StorePageBlock } from "@/lib/cms-page";
+import { StorePageBlocks } from "@/components/customer-care/StorePageBlocks";
 
 export const Route = createFileRoute("/account/help/$topic")({
   head: ({ params }) => ({ meta: [{ title: `${topicTitle(params.topic)} - ASL ORIGINALS` }] }),
@@ -35,11 +37,12 @@ const articles: Record<string, { title: string; body: string }[]> = {
 function HelpTopic() {
   const { topic } = Route.useParams();
   const nav = useNavigate();
+  const { page, hasContent } = useStorePage(`account/help/${topic}`);
   const list = articles[topic] ?? articles.orders;
   return (
     <>
-      <AccountInnerScaffold title={topicTitle(topic)} subtitle="Frequently asked questions" activeId="help" backTo="/account/help">
-        <div className="space-y-3">
+      <AccountInnerScaffold title={hasContent && page?.title ? page.title : topicTitle(topic)} subtitle={hasContent && page?.subtitle ? page.subtitle : "Frequently asked questions"} activeId="help" backTo="/account/help">
+        {hasContent && page ? (<StorePageBlocks blocks={page.blocks as StorePageBlock[]} />) : (<div className="space-y-3">
           {list.map((a, i) => (
             <motion.details key={i} variants={fadeInUp} initial="hidden" animate="visible" className="rounded-2xl border border-border bg-white p-5 group">
               <summary className="flex items-center justify-between cursor-pointer list-none">
@@ -49,7 +52,7 @@ function HelpTopic() {
               <p className="mt-3 text-[13px] text-foreground/75 leading-relaxed">{a.body}</p>
             </motion.details>
           ))}
-        </div>
+        </div>)}
         <div className="rounded-2xl border border-border bg-muted/40 p-5 text-center">
           <div className="font-semibold text-[14px]">Still need help?</div>
           <p className="text-[12px] text-muted-foreground mt-1">Our team is one message away.</p>
