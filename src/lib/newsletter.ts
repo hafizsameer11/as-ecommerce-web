@@ -1,27 +1,17 @@
-const PENDING_KEY = "asl-newsletter-pending";
-
-export type NewsletterResult = { status: "subscribed" } | { status: "pending" };
-
 /**
- * The API has no public newsletter-subscribe endpoint, so:
- * - signed in  → real call: PATCH /store/me { marketingOptIn: true }
- * - guest      → remember the email locally and opt the account in on next sign-in / sign-up
+ * Storefront newsletter signup → POST /store/marketing/newsletter
+ * (known customers get marketingOptIn; guests become NewsletterLead).
  */
+export type NewsletterResult = { status: "subscribed" };
+
 export async function subscribeNewsletter(email: string): Promise<NewsletterResult> {
-  const { useAuth } = await import("@/lib/auth-store");
-  if (useAuth.getState().isLoggedIn) {
-    const { storeAuthApi } = await import("@/lib/api/auth");
-    await storeAuthApi.updateProfile({ marketingOptIn: true });
-    clearPendingNewsletter();
-    return { status: "subscribed" };
-  }
-  try {
-    window.localStorage.setItem(PENDING_KEY, email.trim().toLowerCase());
-  } catch {
-    /* storage unavailable */
-  }
-  return { status: "pending" };
+  const { cmsApi } = await import("@/lib/api/cms");
+  await cmsApi.subscribeNewsletter(email.trim().toLowerCase());
+  clearPendingNewsletter();
+  return { status: "subscribed" };
 }
+
+const PENDING_KEY = "asl-newsletter-pending";
 
 export function clearPendingNewsletter() {
   try {
@@ -31,7 +21,7 @@ export function clearPendingNewsletter() {
   }
 }
 
-/** After sign-in: if the guest asked for newsletters, opt the account in. */
+/** After sign-in: flush any legacy guest-pending key into marketingOptIn. */
 export async function flushPendingNewsletter() {
   if (typeof window === "undefined") return;
   let pending: string | null = null;
@@ -42,8 +32,8 @@ export async function flushPendingNewsletter() {
   }
   if (!pending) return;
   try {
-    const { storeAuthApi } = await import("@/lib/api/auth");
-    await storeAuthApi.updateProfile({ marketingOptIn: true });
+    const { cmsApi } = await import("@/lib/api/cms");
+    await cmsApi.subscribeNewsletter(pending);
     clearPendingNewsletter();
   } catch (err) {
     console.warn("[newsletter] opt-in after sign-in failed", err);

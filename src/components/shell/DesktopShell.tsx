@@ -466,14 +466,8 @@ export function DesktopShell({
                 onSubmit={(e) => {
                   e.preventDefault();
                   void subscribeNewsletter(email)
-                    .then((res) => {
-                      if (res.status === "subscribed") {
-                        toast.success("You're subscribed to ASL ORIGINALS updates");
-                      } else {
-                        toast("We'll email you when newsletters open", {
-                          description: "Sign in or create an account to opt in to updates right away.",
-                        });
-                      }
+                    .then(() => {
+                      toast.success("You're subscribed to ASL ORIGINALS updates");
                       setEmail("");
                     })
                     .catch((err) => toast.error(err instanceof Error ? err.message : "Could not subscribe"));
