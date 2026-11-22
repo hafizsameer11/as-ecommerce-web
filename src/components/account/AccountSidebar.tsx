@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { goToLabel } from "@/lib/nav-resolve";
 import { Link } from "@tanstack/react-router";
 import { ChevronDown } from "lucide-react";
@@ -6,8 +6,9 @@ import { toast } from "sonner";
 import { sideNavSections, type MenuItem } from "./accountData";
 import { useAuth } from "@/lib/auth-store";
 import { openAppStore } from "@/lib/app-store";
+import { useWishlist, useWishlistCount } from "@/lib/wishlist";
 
-function Row({ n, active }: { n: MenuItem; active: boolean }) {
+function Row({ n, active, badge }: { n: MenuItem; active: boolean; badge?: string }) {
   const signOut = useAuth((s) => s.signOut);
   const openLogin = useAuth((s) => s.openLogin);
   const isLogout = n.id === "logout";
@@ -22,13 +23,14 @@ function Row({ n, active }: { n: MenuItem; active: boolean }) {
   const cls = `w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-[13px] transition-colors ${
     active ? "bg-muted font-semibold" : "text-foreground/70 hover:bg-muted/50"
   } ${isLogout ? "text-rose-600 hover:text-rose-700" : ""}`;
+  const showBadge = badge && badge !== "0";
   return (
     <Cmp {...props} className={cls}>
       <n.Icon className="h-4 w-4" strokeWidth={1.75} />
       <span className="flex-1 text-left">{n.label}</span>
-      {n.badge && (
-        <span className="h-5 w-5 rounded-full bg-ink text-white text-[10px] font-bold grid place-items-center">
-          {n.badge}
+      {showBadge && (
+        <span className="h-5 min-w-5 px-1 rounded-full bg-ink text-white text-[10px] font-bold grid place-items-center">
+          {badge}
         </span>
       )}
     </Cmp>
@@ -36,6 +38,14 @@ function Row({ n, active }: { n: MenuItem; active: boolean }) {
 }
 
 export function AccountSidebar({ activeId = "overview", variant = "default" }: { activeId?: string; variant?: "default" | "drawer" }) {
+  const isLoggedIn = useAuth((s) => s.isLoggedIn);
+  const wishlistCount = useWishlistCount();
+  const refreshWishlist = useWishlist((s) => s.refresh);
+
+  useEffect(() => {
+    if (isLoggedIn) void refreshWishlist();
+  }, [isLoggedIn, refreshWishlist]);
+
   const [openMap, setOpenMap] = useState<Record<string, boolean>>(() =>
     Object.fromEntries(
       sideNavSections
@@ -70,9 +80,15 @@ export function AccountSidebar({ activeId = "overview", variant = "default" }: {
             )}
             {isOpen && (
               <nav className={`space-y-1 ${isCollapsible ? "pl-2 border-l border-border ml-3" : ""}`}>
-                {section.items.map((n) => (
-                  <Row key={n.id} n={n} active={n.id === activeId} />
-                ))}
+                {section.items.map((n) => {
+                  const badge =
+                    n.id === "wishlist"
+                      ? wishlistCount > 0
+                        ? String(wishlistCount)
+                        : undefined
+                      : n.badge;
+                  return <Row key={n.id} n={n} active={n.id === activeId} badge={badge} />;
+                })}
               </nav>
             )}
           </div>

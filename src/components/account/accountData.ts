@@ -60,7 +60,7 @@ export const sideNavSections: MenuSection[] = [
     items: [
       { id: "overview", label: "Overview", desc: "", Icon: Home, to: "/account" },
       { id: "orders", label: "Orders", desc: "", Icon: Receipt, to: "/account/orders" },
-      { id: "wishlist", label: "Wishlist", desc: "", Icon: Heart, badge: "4", to: "/account/wishlist" },
+      { id: "wishlist", label: "Wishlist", desc: "", Icon: Heart, to: "/account/wishlist" },
       { id: "coming-soon", label: "Coming Soon & Reservations", desc: "", Icon: Clock, to: "/coming-soon" },
       { id: "returns", label: "Returns & Exchanges", desc: "", Icon: RefreshCw, to: "/account/returns" },
       { id: "notifications", label: "Notifications", desc: "", Icon: Bell, to: "/account/notifications" },
@@ -161,7 +161,7 @@ export const overviewQuickLinks = [
 
 export const mobileOverviewLinks = [
   { id: "orders", label: "My Orders", desc: "Track, return or buy again", Icon: Package, to: "/account/orders" },
-  { id: "wishlist", label: "Wishlist", desc: "Your saved items", Icon: Heart, count: 4 },
+  { id: "wishlist", label: "Wishlist", desc: "Your saved items", Icon: Heart, to: "/account/wishlist" },
   { id: "address", label: "Address Book", desc: "Manage your addresses", Icon: MapPin },
   { id: "details", label: "Account Details", desc: "Edit your personal information", Icon: User },
   { id: "returns", label: "Returns & Exchanges", desc: "Manage returns & exchanges", Icon: RefreshCw, to: "/account/returns" },
@@ -170,7 +170,7 @@ export const mobileOverviewLinks = [
 
 export const mobileOverviewList: MenuItem[] = [
   { id: "orders", label: "My Orders", desc: "Track, return or buy again", Icon: Package, to: "/account/orders" },
-  { id: "wishlist", label: "Wishlist", desc: "Your saved items", Icon: Heart, badge: "4" },
+  { id: "wishlist", label: "Wishlist", desc: "Your saved items", Icon: Heart, to: "/account/wishlist" },
   { id: "address", label: "Address Book", desc: "Manage your saved addresses", Icon: MapPin },
   { id: "details", label: "Account Details", desc: "Edit your personal information", Icon: User },
   { id: "returns", label: "Returns & Exchanges", desc: "Manage returns & exchanges", Icon: RefreshCw, to: "/account/returns" },

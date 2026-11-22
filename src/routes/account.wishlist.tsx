@@ -118,6 +118,10 @@ function EmptyState() {
 }
 
 function Desktop() {
+  const refresh = useWishlist((s) => s.refresh);
+  useEffect(() => {
+    void refresh();
+  }, [refresh]);
   const items = useWishlistProducts();
   const [filter, setFilter] = useState<WishFilter>("all");
   const saleItems = items.filter((e) => isOnSale(e.product));
@@ -213,6 +217,10 @@ function YouMayAlsoLike({ items, layout }: { items: Product[]; layout: "grid" | 
 
 function Mobile() {
   const nav = useNavigate();
+  const refresh = useWishlist((s) => s.refresh);
+  useEffect(() => {
+    void refresh();
+  }, [refresh]);
   const items = useWishlistProducts();
   const [filter, setFilter] = useState<WishFilter>("all");
   const saleItems = items.filter((e) => isOnSale(e.product));
