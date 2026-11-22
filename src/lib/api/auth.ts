@@ -108,7 +108,32 @@ export const storeAuthApi = {
   },
 
   forgotPassword: (email: string) =>
-    apiRequest<{ sent: boolean }>("/store/auth/password/forgot", { method: "POST", body: { email } }),
+    apiRequest<{ sent: boolean }>("/store/auth/password/forgot", {
+      method: "POST",
+      body: { email },
+      skipAuth: true,
+    }),
+
+  resetPassword: (token: string, password: string) =>
+    apiRequest<{ reset: boolean }>("/store/auth/password/reset", {
+      method: "POST",
+      body: { token, password },
+      skipAuth: true,
+    }),
+
+  requestOtp: (target: string, purpose: "login" | "verify_email" | "verify_phone" = "verify_email") =>
+    apiRequest<{ sent: boolean }>("/store/auth/otp/request", {
+      method: "POST",
+      body: { target, purpose },
+      skipAuth: true,
+    }),
+
+  verifyOtp: (target: string, code: string, purpose: "login" | "verify_email" | "verify_phone" = "verify_email") =>
+    apiRequest<AuthSessionResponse | { verified: boolean }>("/store/auth/otp/verify", {
+      method: "POST",
+      body: { target, purpose, code },
+      skipAuth: true,
+    }),
 
   me: () => apiRequest<CustomerDto>("/store/me"),
 

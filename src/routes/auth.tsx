@@ -35,8 +35,9 @@ function AuthPage() {
   }, [next]);
 
   useEffect(() => {
-    if (isLoggedIn) navigate({ to: safeNext as any, replace: true });
-  }, [isLoggedIn, safeNext, navigate]);
+    // Stay on the page for email OTP after signup (register already creates a session).
+    if (isLoggedIn && mode !== "otp") navigate({ to: safeNext as any, replace: true });
+  }, [isLoggedIn, mode, safeNext, navigate]);
 
   return (
     <div className="min-h-dvh bg-[#0d0d0d] text-white flex flex-col">

@@ -4,6 +4,7 @@ import { Toaster, toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, ArrowRight, Check, Eye, EyeOff, Mail, Lock, User, Phone } from "lucide-react";
 import { useAuth, type AuthMode } from "@/lib/auth-store";
+import { storeAuthApi } from "@/lib/api/auth";
 
 export type { AuthMode };
 
@@ -51,8 +52,9 @@ export function AuthPanel({
   const cancelTwoFactor = useAuth((s) => s.cancelTwoFactor);
 
   useEffect(() => {
-    if (isLoggedIn && onDone) onDone();
-  }, [isLoggedIn, onDone]);
+    // Register creates a session immediately; keep the panel open for email OTP.
+    if (isLoggedIn && onDone && mode !== "otp") onDone();
+  }, [isLoggedIn, onDone, mode]);
 
   const switchMode = (m: AuthMode, opts?: { email?: string }) => {
     setMode(m);
@@ -101,7 +103,13 @@ export function AuthPanel({
               onSubmit={async (data) => {
                 try {
                   await register(data);
+                  try {
+                    await storeAuthApi.requestOtp(data.email, "verify_email");
+                  } catch {
+                    /* optional verify step */
+                  }
                   switchMode("otp", { email: data.email });
+                  toast.success("Account created — enter the code we emailed you");
                 } catch (err) {
                   toast.error(err instanceof Error ? err.message : "Sign up failed");
                 }
@@ -115,8 +123,8 @@ export function AuthPanel({
               onSubmit={async (email) => {
                 try {
                   await useAuth.getState().forgotPassword(email);
-                  toast.success("Reset link sent");
-                  switchMode("otp", { email });
+                  toast.success("If that email exists, a reset link is on its way");
+                  switchMode("signin", { email });
                 } catch (err) {
                   toast.error(err instanceof Error ? err.message : "Could not send reset link");
                 }
@@ -128,7 +136,8 @@ export function AuthPanel({
             <OtpForm
               email={email ?? "you@example.com"}
               onVerified={() => {
-                toast.success("Verified");
+                toast.success("Email verified");
+                onDone?.();
               }}
               onBack={() => switchMode("signin")}
             />
@@ -307,10 +316,10 @@ export function ForgotForm({
           <ArrowLeft className="h-3.5 w-3.5" /> Back to sign in
         </button>
         <h1 className="font-display text-2xl font-bold">Forgot password</h1>
-        <p className="text-sm text-muted-foreground mt-1">Enter your email and we'll send a 6-digit reset code.</p>
+        <p className="text-sm text-muted-foreground mt-1">Enter your email and we'll send a password reset link.</p>
       </div>
       <Field icon={Mail} type="email" placeholder="Email address" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" />
-      <PrimaryBtn type="submit">Send reset code <ArrowRight className="h-4 w-4" /></PrimaryBtn>
+      <PrimaryBtn type="submit">Send reset link <ArrowRight className="h-4 w-4" /></PrimaryBtn>
     </form>
   );
 }
@@ -364,7 +373,14 @@ export function OtpForm({
       onSubmit={(e) => {
         e.preventDefault();
         if (!complete) return toast.error("Enter the 6-digit code");
-        onVerified();
+        void (async () => {
+          try {
+            await storeAuthApi.verifyOtp(email, code, "verify_email");
+            onVerified();
+          } catch (err) {
+            toast.error(err instanceof Error ? err.message : "Invalid code");
+          }
+        })();
       }}
       className="space-y-6"
     >
@@ -374,8 +390,7 @@ export function OtpForm({
         </button>
         <h1 className="font-display text-2xl font-bold">Verify your email</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          We sent a 6-digit code to <span className="text-ink font-medium">{email}</span>. Enter it below to continue.{" "}
-          <span className="italic">(Prototype: any 6 digits work)</span>
+          We sent a 6-digit code to <span className="text-ink font-medium">{email}</span>. Enter it below to continue.
         </p>
       </div>
       <div className="grid grid-cols-6 gap-2" onPaste={onPaste}>
@@ -397,7 +412,23 @@ export function OtpForm({
         {cooldown > 0 ? (
           <>Resend code in <span className="text-ink font-medium">{cooldown}s</span></>
         ) : (
-          <button type="button" onClick={() => { setCooldown(30); toast("New code sent"); }} className="text-ink font-semibold underline underline-offset-2">Resend code</button>
+          <button
+            type="button"
+            onClick={() => {
+              void (async () => {
+                try {
+                  await storeAuthApi.requestOtp(email, "verify_email");
+                  setCooldown(30);
+                  toast.success("New code sent");
+                } catch (err) {
+                  toast.error(err instanceof Error ? err.message : "Could not resend code");
+                }
+              })();
+            }}
+            className="text-ink font-semibold underline underline-offset-2"
+          >
+            Resend code
+          </button>
         )}
       </div>
     </form>

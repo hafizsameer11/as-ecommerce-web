@@ -48,6 +48,35 @@ export type ApiOrderDetail = ApiOrderCard & {
   timeline?: { type: string; title: string; detail?: string | null; at: string }[];
 };
 
+export type ApiOrderTracking = {
+  orderId: string;
+  number: string;
+  status: string;
+  statusKey: string;
+  delivery: string;
+  placedAt: string;
+  deliveredAt?: string | null;
+  eta?: string | null;
+  shipments: Array<{
+    number?: string;
+    carrier?: string;
+    carrierLabel?: string;
+    trackingNumber?: string | null;
+    status?: string;
+    statusLabel?: string;
+    etaAt?: string | null;
+    events?: Array<{ at: string; status: string; label?: string; location?: string; note?: string | null }>;
+  }>;
+  pickup?: {
+    number?: string;
+    status?: string;
+    statusLabel?: string;
+    locationName?: string;
+    scheduledAt?: string | null;
+  } | null;
+  timeline: Array<{ type: string; title: string; detail?: string | null; at: string }>;
+};
+
 export type ApiAddress = {
   id: string;
   label: string;
@@ -150,6 +179,9 @@ export const accountApi = {
 
   myOrder: (id: string) =>
     apiRequest<ApiOrderDetail>(`/store/me/orders/${encodeURIComponent(id)}`),
+
+  tracking: (id: string) =>
+    apiRequest<ApiOrderTracking>(`/store/me/orders/${encodeURIComponent(id)}/tracking`),
 
   cancelOrder: (id: string, reason?: string) =>
     apiRequest(`/store/me/orders/${encodeURIComponent(id)}/cancel`, {

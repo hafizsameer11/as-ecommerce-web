@@ -25,6 +25,7 @@ import { Route as FaqRouteImport } from './routes/faq'
 import { Route as HowItWorksRouteImport } from './routes/how-it-works'
 import { Route as NewArrivalsRouteImport } from './routes/new-arrivals'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as ShopRouteImport } from './routes/shop'
 import { Route as SplashRouteImport } from './routes/splash'
@@ -182,6 +183,11 @@ const NewArrivalsRoute = NewArrivalsRouteImport.update({
 const OnboardingRoute = OnboardingRouteImport.update({
   id: '/onboarding',
   path: '/onboarding',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SearchRoute = SearchRouteImport.update({
@@ -604,6 +610,7 @@ export interface FileRoutesByFullPath {
   '/how-it-works': typeof HowItWorksRoute
   '/new-arrivals': typeof NewArrivalsRoute
   '/onboarding': typeof OnboardingRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/search': typeof SearchRoute
   '/shop': typeof ShopRouteWithChildren
   '/splash': typeof SplashRoute
@@ -698,6 +705,7 @@ export interface FileRoutesByTo {
   '/how-it-works': typeof HowItWorksRoute
   '/new-arrivals': typeof NewArrivalsRoute
   '/onboarding': typeof OnboardingRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/search': typeof SearchRoute
   '/splash': typeof SplashRoute
   '/start-request': typeof StartRequestRoute
@@ -786,6 +794,7 @@ export interface FileRoutesById {
   '/how-it-works': typeof HowItWorksRoute
   '/new-arrivals': typeof NewArrivalsRoute
   '/onboarding': typeof OnboardingRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/search': typeof SearchRoute
   '/shop': typeof ShopRouteWithChildren
   '/splash': typeof SplashRoute
@@ -884,6 +893,7 @@ export interface FileRouteTypes {
     | '/how-it-works'
     | '/new-arrivals'
     | '/onboarding'
+    | '/reset-password'
     | '/search'
     | '/shop'
     | '/splash'
@@ -978,6 +988,7 @@ export interface FileRouteTypes {
     | '/how-it-works'
     | '/new-arrivals'
     | '/onboarding'
+    | '/reset-password'
     | '/search'
     | '/splash'
     | '/start-request'
@@ -1065,6 +1076,7 @@ export interface FileRouteTypes {
     | '/how-it-works'
     | '/new-arrivals'
     | '/onboarding'
+    | '/reset-password'
     | '/search'
     | '/shop'
     | '/splash'
@@ -1162,6 +1174,7 @@ export interface RootRouteChildren {
   HowItWorksRoute: typeof HowItWorksRoute
   NewArrivalsRoute: typeof NewArrivalsRoute
   OnboardingRoute: typeof OnboardingRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   SearchRoute: typeof SearchRoute
   ShopRoute: typeof ShopRouteWithChildren
   SplashRoute: typeof SplashRoute
@@ -1289,6 +1302,13 @@ declare module '@tanstack/react-router' {
       path: '/onboarding'
       fullPath: '/onboarding'
       preLoaderRoute: typeof OnboardingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/search': {
@@ -2122,6 +2142,7 @@ const rootRouteChildren: RootRouteChildren = {
   HowItWorksRoute: HowItWorksRoute,
   NewArrivalsRoute: NewArrivalsRoute,
   OnboardingRoute: OnboardingRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   SearchRoute: SearchRoute,
   ShopRoute: ShopRouteWithChildren,
   SplashRoute: SplashRoute,
@@ -2139,13 +2160,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
