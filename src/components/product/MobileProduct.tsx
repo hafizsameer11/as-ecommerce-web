@@ -21,10 +21,17 @@ import type { Drop } from "@/lib/coming-soon";
 import { goToLabel } from "@/lib/nav-resolve";
 import { shareProduct } from "@/lib/product-sharing";
 import { useSizeGuideFor } from "@/lib/size-guide-store";
+import { usePublicSettings } from "@/lib/api/settings";
+import { freeShippingThresholdNaira, returnWindowDays } from "@/lib/public-settings-format";
+import { createConciergeRequestFromProduct } from "@/lib/concierge-submit";
 
 
 export function MobileProduct({ product, forceConcierge = false, drop }: { product: Product; forceConcierge?: boolean; drop?: Drop }) {
   const navigate = useNavigate();
+  const { data: publicSettings } = usePublicSettings();
+  const freeFrom = freeShippingThresholdNaira(publicSettings);
+  const returnDays = returnWindowDays(publicSettings);
+  const freeFromLabel = new Intl.NumberFormat("en-NG").format(freeFrom);
   const sizeAvail = getSizeAvailability(product);
   const guide = useSizeGuideFor(product.brandHandle ?? product.brand, product.category);
   const firstAvailable = product.sizes.find((s) => sizeAvail[s]) ?? product.sizes[0];
@@ -50,6 +57,7 @@ export function MobileProduct({ product, forceConcierge = false, drop }: { produ
     return () => ro.disconnect();
   }, []);
   const [qty, setQty] = useState(1);
+  const [requestBusy, setRequestBusy] = useState(false);
   const [open, setOpen] = useState<Record<string, boolean>>({ Authentic: true });
   const [sizeGuideOpen, setSizeGuideOpen] = useState(false);
   const por = !drop && isPriceOnRequest(product);
@@ -84,6 +92,20 @@ export function MobileProduct({ product, forceConcierge = false, drop }: { produ
     const result = await shareProduct(product);
     if (result === "copied") toast.success("Product link copied");
     if (result === "unavailable") toast.error("Sharing is not available");
+  };
+
+  const handleAddToRequest = async () => {
+    if (requestBusy) return;
+    setRequestBusy(true);
+    try {
+      await createConciergeRequestFromProduct(product, { size: selectedSize, color: selectedColor, qty });
+      toast.success("Request submitted — we'll update you within 24–48 hours");
+      navigate({ to: "/account/requests" });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not add to request");
+    } finally {
+      setRequestBusy(false);
+    }
   };
 
   return (
@@ -339,10 +361,11 @@ export function MobileProduct({ product, forceConcierge = false, drop }: { produ
               <motion.button
                 whileTap="tap"
                 variants={buttonTap}
-                onClick={() => { toast("Added to your request"); navigate({ to: "/start-request", search: { productId: product.id } }); }}
-                className="flex-1 h-12 bg-ink text-white text-[12px] font-bold uppercase tracking-widest rounded-[3px] flex items-center justify-center gap-2"
+                onClick={() => void handleAddToRequest()}
+                disabled={requestBusy}
+                className="flex-1 h-12 bg-ink text-white text-[12px] font-bold uppercase tracking-widest rounded-[3px] flex items-center justify-center gap-2 disabled:opacity-60"
               >
-                <ClipboardList className="h-4 w-4" /> Add to Request
+                <ClipboardList className="h-4 w-4" /> {requestBusy ? "Submitting…" : "Add to Request"}
               </motion.button>
               <motion.button
                 whileTap="tap"
@@ -441,8 +464,8 @@ export function MobileProduct({ product, forceConcierge = false, drop }: { produ
           <div className="px-4 mt-8 space-y-3">
             {[
               { key: "Authentic", Icon: StrokeRosetteCheckIcon, title: "AUTHENTIC GUARANTEED", body: "All items are sourced from trusted suppliers. 100% authentic or your money back. Every item is verified by our experts for authenticity." },
-              { key: "Shipping", Icon: Truck, title: "SHIPPING", body: "Free shipping on orders over ₦1,000,000. Next-day delivery available. Orders are typically processed within 1 - 2 working days. Delivery times may vary depending on your location and the delivery option selected at checkout. Nationwide delivery available." },
-              { key: "Returns", Icon: RefreshCcw, title: "EASY RETURNS", body: "Eligible items may be returned or exchanged within 7 days of delivery. Items must be unworn, unwashed, unused and returned in their original condition and packaging." },
+              { key: "Shipping", Icon: Truck, title: "SHIPPING", body: `Free shipping on orders over ₦${freeFromLabel}. Next-day delivery available. Orders are typically processed within 1 - 2 working days. Delivery times may vary depending on your location and the delivery option selected at checkout. Nationwide delivery available.` },
+              { key: "Returns", Icon: RefreshCcw, title: "EASY RETURNS", body: `Eligible items may be returned or exchanged within ${returnDays} days of delivery. Items must be unworn, unwashed, unused and returned in their original condition and packaging.` },
               { key: "Payment", Icon: Lock, title: "SECURE PAYMENTS", body: "Shop with confidence. Your payment information is securely protected, with multiple trusted payment options available for a safe and seamless checkout." },
             ].map(({ key, Icon, title, body }) => (
               <div key={key} className="border border-border rounded-lg">

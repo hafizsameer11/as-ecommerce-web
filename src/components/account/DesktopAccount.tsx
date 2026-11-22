@@ -20,7 +20,9 @@ import {
 import { StrokeRosetteCheckIcon } from "@/components/home/TrustIcons";
 import { DesktopShell } from "@/components/shell/DesktopShell";
 import { AccountSidebar } from "./AccountSidebar";
-import { overviewBenefits } from "./accountData";
+import { overviewBenefitsForSettings } from "./accountData";
+import { usePublicSettings } from "@/lib/api/settings";
+import { freeShippingThresholdNaira, returnWindowDays } from "@/lib/public-settings-format";
 import { useEffect } from "react";
 import { useClubRewards } from "./rewardsData";
 import { useWallet } from "@/lib/wallet-store";
@@ -33,6 +35,10 @@ import aslBag from "@/assets/asl-bag.png";
 import { fadeInUp, staggerContainer, staggerItem } from "@/lib/motion";
 
 export function DesktopAccount() {
+  const { data: publicSettings } = usePublicSettings();
+  const freeShipLabel = new Intl.NumberFormat("en-NG").format(freeShippingThresholdNaira(publicSettings));
+  const returnDays = returnWindowDays(publicSettings);
+  const clubBenefits = overviewBenefitsForSettings(publicSettings);
   const displayName = useAccountDisplayName();
   const hydrateOrders = useOrders((s) => s.hydrate);
   const orders = useAllOrders();
@@ -307,7 +313,7 @@ export function DesktopAccount() {
               </Link>
             </div>
             <div className="grid grid-cols-5 gap-4">
-              {overviewBenefits.map((b) => (
+              {clubBenefits.map((b) => (
                 <div key={b.id} className="text-center">
                   <div className="relative h-16 w-16 mx-auto grid place-items-center">
                     <svg viewBox="0 0 100 100" className="absolute inset-0 h-full w-full text-[#e8ddc7]" aria-hidden>
@@ -363,8 +369,8 @@ export function DesktopAccount() {
           <motion.div variants={fadeInUp} initial="hidden" animate="visible" className="grid grid-cols-4 gap-4 py-6 border-t border-border">
             {[
               { Icon: StrokeRosetteCheckIcon, label: "100% Authentic", desc: "Guaranteed original" },
-              { Icon: Truck, label: "Free Shipping", desc: "On orders over ₦50,000" },
-              { Icon: RefreshCw, label: "7-Day Returns", desc: "Easy returns & exchanges" },
+              { Icon: Truck, label: "Free Shipping", desc: `On orders over ₦${freeShipLabel}` },
+              { Icon: RefreshCw, label: `${returnDays}-Day Returns`, desc: "Easy returns & exchanges" },
               { Icon: Headphones, label: "24/7 Support", desc: "We're here to help" },
             ].map((t) => (
               <div key={t.label} className="flex items-center gap-3">

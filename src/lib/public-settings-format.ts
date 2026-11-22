@@ -121,6 +121,22 @@ export function storeProfileContact(settings: PublicSettings | null | undefined)
   };
 }
 
+export type LegalPolicyKey = "terms" | "privacy" | "refund" | "shipping" | "cookies";
+
+/** CMS customer-care slug → admin Settings → Legal field */
+export const CUSTOMER_CARE_LEGAL_SLUG: Record<string, LegalPolicyKey> = {
+  "customer-care/terms-of-service": "terms",
+  "customer-care/privacy-policy": "privacy",
+  "customer-care/refund-policy": "refund",
+  "customer-care/return-policy": "refund",
+  "customer-care/shipping-policy": "shipping",
+};
+
+export function legalPolicyText(settings: PublicSettings | null | undefined, key: LegalPolicyKey): string {
+  const legal = section<Partial<Record<LegalPolicyKey, string>>>(settings, "legal");
+  return (legal?.[key] ?? "").trim();
+}
+
 export function formatPaymentStatusLabel(paymentStatus?: string | null, orderStatus?: string): string {
   const ps = (paymentStatus || "").trim().toLowerCase();
   if (ps === "paid" || ps === "success" || ps === "completed") return "Paid";

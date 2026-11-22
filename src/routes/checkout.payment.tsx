@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { Toaster, toast } from "sonner";
-import { CreditCard, Building2, Truck, ArrowRight, ArrowLeft, Tag, X, Lock, CircleCheck } from "lucide-react";
+import { CreditCard, Building2, Truck, ArrowRight, ArrowLeft, Tag, X, Lock, CircleCheck, Gift } from "lucide-react";
 import { CheckoutPage } from "@/components/checkout/CheckoutPage";
 import { naira } from "@/components/checkout/checkoutData";
 import { useCheckout, shippingFor } from "@/lib/checkout-store";
@@ -24,6 +24,10 @@ function PaymentPage() {
   const discountAmount = useCheckout((s) => s.discountAmount);
   const applyCoupon = useCheckout((s) => s.applyCoupon);
   const removeCoupon = useCheckout((s) => s.removeCoupon);
+  const giftCard = useCheckout((s) => s.giftCard);
+  const giftCardApplied = useCheckout((s) => s.giftCardApplied);
+  const applyGiftCard = useCheckout((s) => s.applyGiftCard);
+  const removeGiftCard = useCheckout((s) => s.removeGiftCard);
   const syncSession = useCheckout((s) => s.syncSession);
   const delivery = useCheckout((s) => s.delivery);
   const address = useCheckout((s) => s.address);
@@ -35,6 +39,18 @@ function PaymentPage() {
   const myCoupons = useMyCoupons((s) => s.coupons);
   const [coupon, setCoupon] = useState(couponCode ?? "");
   const [couponSuccess, setCouponSuccess] = useState<string | null>(null);
+  const [gc, setGc] = useState(giftCard ?? "");
+  const [gcSuccess, setGcSuccess] = useState<string | null>(null);
+  const onApplyGc = async () => {
+    const res = await applyGiftCard(gc);
+    if (res.ok) {
+      setGcSuccess(res.message);
+      toast.success(res.message);
+    } else {
+      setGcSuccess(null);
+      toast.error(res.message);
+    }
+  };
   const onApply = async (raw?: string) => {
     const code = raw ?? coupon;
     setCoupon(code);
@@ -128,6 +144,51 @@ function PaymentPage() {
                 )}
           </section>
 
+          <section>
+            <h2 className="text-[15px] font-semibold mb-3">Gift card</h2>
+            <div className="space-y-1 max-w-md">
+              <label className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Card code</label>
+              <div className="flex items-center gap-1.5">
+                <input
+                  value={gc}
+                  onChange={(e) => setGc(e.target.value.toUpperCase())}
+                  onKeyDown={(e) => { if (e.key === "Enter") void onApplyGc(); }}
+                  placeholder="GC-1234-5678"
+                  className="min-w-0 flex-1 h-8 rounded bg-muted px-2.5 text-[11px] font-mono uppercase placeholder:normal-case placeholder:font-sans focus:outline-none focus:ring-1 focus:ring-ink"
+                />
+                <button type="button" onClick={() => void onApplyGc()} className="h-8 px-3 rounded bg-ink text-white text-[11px] font-semibold hover:opacity-90 shrink-0">Apply</button>
+              </div>
+              <Link to="/customer-care/gift-cards" className="text-[11px] font-semibold underline text-muted-foreground">Check balance without checking out</Link>
+            </div>
+            {giftCard && (
+              <div className="mt-3 space-y-3">
+                {gcSuccess && (
+                  <div role="status" className="flex items-center gap-2 rounded border border-border bg-card px-3 py-2.5 text-[12px] font-semibold text-foreground shadow-sm">
+                    <CircleCheck className="h-4 w-4 shrink-0" />
+                    <span>{gcSuccess}</span>
+                  </div>
+                )}
+                <div className="flex items-center justify-between gap-3 rounded bg-ink px-3 py-2.5 text-white">
+                  <div className="min-w-0 flex items-center gap-2">
+                    <Gift className="h-4 w-4 shrink-0" />
+                    <div>
+                      <div className="text-[12px] font-semibold font-mono truncate">{giftCard}</div>
+                      {giftCardApplied > 0 && (
+                        <div className="text-[10.5px] text-white/80">{naira(giftCardApplied)} applied to this order</div>
+                      )}
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => { removeGiftCard(); setGc(""); setGcSuccess(null); toast("Gift card removed"); }}
+                    className="shrink-0 p-1 hover:bg-white/10 rounded"
+                    aria-label="Remove gift card"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            )}
+          </section>
 
           <section>
             <h2 className="text-[15px] font-semibold mb-3">1. Delivery Method</h2>

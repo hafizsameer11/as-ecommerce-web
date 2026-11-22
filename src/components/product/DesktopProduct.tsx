@@ -23,6 +23,7 @@ import { useSizeGuideFor } from "@/lib/size-guide-store";
 import { useRelatedProducts } from "@/lib/catalog-product-cache";
 import { usePublicSettings } from "@/lib/api/settings";
 import { freeShippingThresholdNaira, returnWindowDays } from "@/lib/public-settings-format";
+import { createConciergeRequestFromProduct } from "@/lib/concierge-submit";
 
 const ALL_TABS = ["PRODUCT DETAILS", "REVIEWS", "SHIPPING", "RETURNS"];
 
@@ -47,6 +48,7 @@ export function DesktopProduct({ product, forceConcierge = false, drop }: { prod
   const notifyRemove = useNotify((s) => s.remove);
   const [activeImg, setActiveImg] = useState(0);
   const [qty, setQty] = useState(1);
+  const [requestBusy, setRequestBusy] = useState(false);
   const por = !drop && isPriceOnRequest(product);
   const concierge = !drop && (forceConcierge || por || isConciergeProduct(product));
   const oos = !drop && !concierge && isOutOfStock(product);
@@ -79,6 +81,20 @@ export function DesktopProduct({ product, forceConcierge = false, drop }: { prod
     const result = await shareProduct(product);
     if (result === "copied") toast.success("Product link copied");
     if (result === "unavailable") toast.error("Sharing is not available");
+  };
+
+  const handleAddToRequest = async () => {
+    if (requestBusy) return;
+    setRequestBusy(true);
+    try {
+      await createConciergeRequestFromProduct(product, { size: selectedSize, color: selectedColor, qty });
+      toast.success("Request submitted — we'll update you within 24–48 hours");
+      navigate({ to: "/account/requests" });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not add to request");
+    } finally {
+      setRequestBusy(false);
+    }
   };
 
 
@@ -364,10 +380,11 @@ export function DesktopProduct({ product, forceConcierge = false, drop }: { prod
                     <motion.button
                       whileTap="tap"
                       variants={buttonTap}
-                      onClick={() => { toast("Added to your request"); navigate({ to: "/start-request" }); }}
-                      className="flex-1 h-11 bg-ink text-white text-[12px] font-bold uppercase tracking-widest rounded-[3px] flex items-center justify-center gap-2"
+                      onClick={() => void handleAddToRequest()}
+                      disabled={requestBusy}
+                      className="flex-1 h-11 bg-ink text-white text-[12px] font-bold uppercase tracking-widest rounded-[3px] flex items-center justify-center gap-2 disabled:opacity-60"
                     >
-                      <ClipboardList className="h-4 w-4" /> Add to Request
+                      <ClipboardList className="h-4 w-4" /> {requestBusy ? "Submitting…" : "Add to Request"}
                     </motion.button>
                     <motion.button
                       whileTap="tap"
@@ -443,7 +460,7 @@ export function DesktopProduct({ product, forceConcierge = false, drop }: { prod
                   {[
                     { icon: StrokeRosetteCheckIcon, title: "100% Authentic", sub: "Authenticity Guaranteed" },
                     { icon: Truck, title: "Free Shipping", sub: `On orders over ₦${freeFromLabel}` },
-                    { icon: RefreshCcw, title: "7-Day Returns", sub: "Easy returns & exchanges" },
+                    { icon: RefreshCcw, title: `${returnDays}-Day Returns`, sub: "Easy returns & exchanges" },
                   ].map(({ icon: Icon, title, sub }) => (
                     <div key={title} className="flex flex-col items-center text-center px-3 py-4">
                       <Icon className="h-5 w-5 mb-2" strokeWidth={1.5} />
@@ -461,7 +478,7 @@ export function DesktopProduct({ product, forceConcierge = false, drop }: { prod
                 {[
                   { icon: StrokeRosetteCheckIcon, title: "AUTHENTIC GUARANTEED", desc: "All items are sourced from trusted suppliers. 100% authentic or your money back. Every item is verified by our experts for authenticity." },
                   { icon: Truck, title: "SHIPPING", desc: `Free shipping on orders over ₦${freeFromLabel}. Next-day delivery available. Orders are typically processed within 1 - 2 working days. Delivery times may vary depending on your location and the delivery option selected at checkout. Nationwide delivery available.` },
-                  { icon: RefreshCcw, title: "EASY RETURNS", desc: "Eligible items may be returned or exchanged within 7 days of delivery. Items must be unworn, unwashed, unused and returned in their original condition and packaging." },
+                  { icon: RefreshCcw, title: "EASY RETURNS", desc: `Eligible items may be returned or exchanged within ${returnDays} days of delivery. Items must be unworn, unwashed, unused and returned in their original condition and packaging.` },
                   { icon: Lock, title: "SECURE PAYMENTS", desc: "Shop with confidence. Your payment information is securely protected, with multiple trusted payment options available for a safe and seamless checkout." },
                 ].map(({ icon: Icon, title, desc }) => (
                   <div key={title} className="border border-border rounded-lg p-4">

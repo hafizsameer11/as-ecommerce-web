@@ -40,6 +40,7 @@ export type CheckoutSnapshot = {
     couponCode?: string | null;
     useWallet?: boolean;
     giftMessage?: string | null;
+    giftCardCode?: string | null;
   };
   totals?: {
     subtotal: number;
@@ -47,6 +48,10 @@ export type CheckoutSnapshot = {
     shipping: number;
     total: number;
     due: number;
+    walletApplied?: number;
+    giftCardApplied?: number;
+    giftCard?: { code: string; balance: number } | null;
+    giftCardError?: { message?: string } | null;
     coupons?: { code: string; title?: string; discount: number }[];
     couponError?: string | null;
   };
@@ -179,6 +184,25 @@ export const commerceApi = {
 
   removeCoupon: async () =>
     apiRequest<CheckoutSnapshot>("/store/checkout/coupon", {
+      method: "DELETE",
+      headers: cartHeaders(),
+    }),
+
+  giftCardBalance: (code: string) =>
+    apiRequest<{ code: string; balance: number; status: string; expiresAt: string }>(
+      `/store/gift-cards/${encodeURIComponent(code.trim())}/balance`,
+      { headers: cartHeaders() }
+    ),
+
+  applyGiftCard: async (code: string) =>
+    apiRequest<{
+      message: string;
+      giftCard: { code: string; balance: number; applied: number };
+      checkout: CheckoutSnapshot;
+    }>("/store/checkout/gift-card", { method: "POST", body: { code }, headers: cartHeaders() }),
+
+  removeGiftCard: async () =>
+    apiRequest<CheckoutSnapshot>("/store/checkout/gift-card", {
       method: "DELETE",
       headers: cartHeaders(),
     }),

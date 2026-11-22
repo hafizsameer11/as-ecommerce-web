@@ -27,6 +27,8 @@ type CheckoutState = {
   delivery: DeliveryMethod;
   payment: PaymentMethod;
   coupon: string | null;
+  giftCard: string | null;
+  giftCardApplied: number;
   discountPct: number;
   discountAmount: number;
   shippingAmount: number;
@@ -43,6 +45,8 @@ type CheckoutState = {
   setPayment: (m: PaymentMethod) => void;
   applyCoupon: (code: string) => Promise<{ ok: boolean; pct: number; message: string }>;
   removeCoupon: () => void;
+  applyGiftCard: (code: string) => Promise<{ ok: boolean; message: string }>;
+  removeGiftCard: () => void;
   syncSession: () => Promise<void>;
   getPlaceOrderIdempotencyKey: () => string;
   clearPlaceOrderIdempotencyKey: () => void;
@@ -66,6 +70,12 @@ function applySnapshot(
   if (snap.session?.shippingRateId) patch.shippingRateId = snap.session.shippingRateId;
   if (snap.session?.couponCode !== undefined) {
     patch.coupon = snap.session.couponCode ?? null;
+  }
+  if (snap.session?.giftCardCode !== undefined) {
+    patch.giftCard = snap.session.giftCardCode ?? null;
+  }
+  if (snap.totals?.giftCardApplied !== undefined) {
+    patch.giftCardApplied = koboToNaira(snap.totals.giftCardApplied);
   }
   if (snap.totals) {
     const sub = snap.totals.subtotal || 0;
@@ -109,6 +119,8 @@ export const useCheckout = create<CheckoutState>()(
       delivery: "ship",
       payment: "paystack",
       coupon: null,
+      giftCard: null,
+      giftCardApplied: 0,
       discountPct: 0,
       discountAmount: 0,
       shippingAmount: 0,
@@ -208,6 +220,27 @@ export const useCheckout = create<CheckoutState>()(
       removeCoupon: () => {
         set({ coupon: null, discountPct: 0, discountAmount: 0 });
         void commerceApi.removeCoupon().catch(() => undefined);
+      },
+      applyGiftCard: async (raw) => {
+        const code = raw.trim().toUpperCase();
+        if (code.length < 4) return { ok: false, message: "Enter a gift card code" };
+        try {
+          await get().syncSession();
+          const res = await commerceApi.applyGiftCard(code);
+          if (res.checkout) applySnapshot(set, get, res.checkout);
+          set({
+            giftCard: res.giftCard?.code ?? code,
+            giftCardApplied: koboToNaira(res.giftCard?.applied ?? 0),
+          });
+          return { ok: true, message: res.message };
+        } catch (err) {
+          set({ giftCard: null, giftCardApplied: 0 });
+          return { ok: false, message: err instanceof Error ? err.message : "Invalid gift card" };
+        }
+      },
+      removeGiftCard: () => {
+        set({ giftCard: null, giftCardApplied: 0 });
+        void commerceApi.removeGiftCard().catch(() => undefined);
       },
     }),
     { name: "asl-checkout" }

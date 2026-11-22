@@ -21,7 +21,8 @@ import {
   LucideIcon,
 } from "lucide-react";
 import { MobileShell } from "@/components/shell/MobileShell";
-import { overviewBenefits, mobileConciergeList, type MenuItem } from "./accountData";
+import { overviewBenefitsForSettings, mobileConciergeList, type MenuItem } from "./accountData";
+import { usePublicSettings } from "@/lib/api/settings";
 import { useEffect } from "react";
 import { useClubRewards } from "./rewardsData";
 import { useWallet } from "@/lib/wallet-store";
@@ -34,6 +35,8 @@ import aslBag from "@/assets/asl-bag.png";
 import { fadeInUp } from "@/lib/motion";
 
 export function MobileAccount() {
+  const { data: publicSettings } = usePublicSettings();
+  const clubBenefits = overviewBenefitsForSettings(publicSettings);
   const displayName = useAccountDisplayName();
   const hydrateOrders = useOrders((s) => s.hydrate);
   const orders = useAllOrders();
@@ -240,7 +243,7 @@ export function MobileAccount() {
         >
           <SectionHead title="ASL Club Benefits" to="/account/benefits" cta="View all" />
           <div className="mt-3 -mx-4 px-4 flex gap-3 overflow-x-auto snap-x snap-mandatory no-scrollbar">
-            {overviewBenefits.map((b) => (
+            {clubBenefits.map((b) => (
               <div key={b.id} className="snap-start shrink-0 w-[42%] rounded-xl bg-[#f5f2ec] p-3 text-center">
                 <div className="relative h-12 w-12 mx-auto grid place-items-center">
                   <svg viewBox="0 0 100 100" className="absolute inset-0 h-full w-full text-[#e8ddc7]" aria-hidden>

@@ -1,3 +1,5 @@
+import type { PublicSettings } from "@/lib/api/auth";
+import { freeShippingThresholdNaira } from "@/lib/public-settings-format";
 import {
   Home,
   Receipt,
@@ -101,6 +103,7 @@ export const sideNavSections: MenuSection[] = [
       { id: "address", label: "Address Book", desc: "", Icon: MapPin, to: "/account/addresses" },
       { id: "details", label: "Account Details", desc: "", Icon: User, to: "/account/details" },
       { id: "payment-methods", label: "Payment Methods", desc: "", Icon: CreditCard, to: "/account/payment-methods" },
+      { id: "gift-cards", label: "Gift Cards", desc: "Check balance", Icon: Gift, to: "/customer-care/gift-cards" },
       { id: "security", label: "Security", desc: "", Icon: BadgeCheck, to: "/account/security" },
       { id: "referrals", label: "Invite Friends", desc: "", Icon: Gift, to: "/account/referrals" },
       { id: "settings", label: "Account Settings", desc: "", Icon: Settings, to: "/account/settings" },
@@ -137,10 +140,17 @@ export const sideNav: MenuItem[] = sideNavSections.flatMap((s) => s.items);
 export const overviewBenefits = [
   { id: "exclusive", title: "Exclusive\nAccess", desc: "Early access to\nnew arrivals & drops", Icon: Star },
   { id: "discounts", title: "Member\nDiscounts", desc: "Special prices\njust for you", Icon: Percent },
-  { id: "shipping", title: "Free\nShipping", desc: "Free shipping on all\norders over ₦50,000", Icon: Truck },
+  { id: "shipping", title: "Free\nShipping", desc: "Free shipping on qualifying orders", Icon: Truck },
   { id: "support", title: "Priority\nSupport", desc: "Faster response\njust for members", Icon: Headphones },
   { id: "birthday", title: "Birthday Treat", desc: "Special surprise\non your birthday", Icon: Gift },
 ];
+
+export function overviewBenefitsForSettings(settings: PublicSettings | null | undefined) {
+  const freeLabel = new Intl.NumberFormat("en-NG").format(freeShippingThresholdNaira(settings));
+  return overviewBenefits.map((b) =>
+    b.id === "shipping" ? { ...b, desc: `Free shipping on all\norders over ₦${freeLabel}` } : b
+  );
+}
 
 export const overviewQuickLinks = [
   { id: "orders", label: "My Orders", desc: "Track, return or buy again", Icon: Package, cta: "View Orders", to: "/account/orders" },

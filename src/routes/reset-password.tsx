@@ -61,7 +61,7 @@ function ResetPasswordPage() {
     try {
       await storeAuthApi.resetPassword(token, password);
       toast.success("Password updated — sign in with your new password");
-      nav({ to: "/auth", search: { mode: "signin", next: "/account" } });
+      nav({ to: "/auth", search: { mode: "signin", next: "/account", email: undefined } });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Could not reset password");
     } finally {

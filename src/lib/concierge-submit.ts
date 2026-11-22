@@ -1,4 +1,5 @@
 import { loyaltyApi, nairaToKobo } from "@/lib/api/loyalty";
+import type { Product } from "@/lib/shop-data";
 
 export type ConciergeFormFields = {
   name: string;
@@ -29,7 +30,7 @@ export async function submitConciergeRequest(
   const budgetNaira = parseBudgetNaira(form.budget);
   return loyaltyApi.createConciergeRequest(
     {
-      source: extra?.productId ? "product" : "form",
+      source: extra?.productId ? "catalog" : "form",
       productId: extra?.productId,
       itemName: form.name.trim(),
       category: form.category,
@@ -44,4 +45,17 @@ export async function submitConciergeRequest(
     },
     files
   );
+}
+
+export async function createConciergeRequestFromProduct(
+  product: Pick<Product, "id">,
+  opts: { size?: string; color?: string; qty?: number } = {}
+) {
+  return loyaltyApi.createConciergeRequest({
+    source: "catalog",
+    productId: product.id,
+    size: opts.size || undefined,
+    color: opts.color || undefined,
+    qty: opts.qty ?? 1,
+  });
 }

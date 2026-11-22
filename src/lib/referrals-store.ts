@@ -37,7 +37,8 @@ export const useMyReferrals = create<ReferralsState>()((set) => ({
   code: "",
   link: "",
   headline: "Share ASL. Earn credits.",
-  subhead: "Invite friends and earn rewards for every signup.",
+  subhead:
+    "Give friends 10% off their first order. Earn ₦15,000 in wallet credit for every qualifying purchase.",
   stats: { invited: 0, joined: 0, earned: 0, clicks: 0, pending: 0 },
   friends: [],
   hydrated: false,

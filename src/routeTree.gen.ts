@@ -66,6 +66,7 @@ import { Route as CustomerCareAboutUsRouteImport } from './routes/customer-care.
 import { Route as CustomerCareContactUsRouteImport } from './routes/customer-care.contact-us'
 import { Route as CustomerCareCookiePolicyRouteImport } from './routes/customer-care.cookie-policy'
 import { Route as CustomerCareFaqsRouteImport } from './routes/customer-care.faqs'
+import { Route as CustomerCareGiftCardsRouteImport } from './routes/customer-care.gift-cards'
 import { Route as CustomerCareHowItWorksRouteImport } from './routes/customer-care.how-it-works'
 import { Route as CustomerCareOurCommitmentRouteImport } from './routes/customer-care.our-commitment'
 import { Route as CustomerCarePrivacyPolicyRouteImport } from './routes/customer-care.privacy-policy'
@@ -393,6 +394,11 @@ const CustomerCareFaqsRoute = CustomerCareFaqsRouteImport.update({
   path: '/faqs',
   getParentRoute: () => CustomerCareRoute,
 } as any)
+const CustomerCareGiftCardsRoute = CustomerCareGiftCardsRouteImport.update({
+  id: '/gift-cards',
+  path: '/gift-cards',
+  getParentRoute: () => CustomerCareRoute,
+} as any)
 const CustomerCareHowItWorksRoute = CustomerCareHowItWorksRouteImport.update({
   id: '/how-it-works',
   path: '/how-it-works',
@@ -662,6 +668,7 @@ export interface FileRoutesByFullPath {
   '/customer-care/contact-us': typeof CustomerCareContactUsRoute
   '/customer-care/cookie-policy': typeof CustomerCareCookiePolicyRoute
   '/customer-care/faqs': typeof CustomerCareFaqsRoute
+  '/customer-care/gift-cards': typeof CustomerCareGiftCardsRoute
   '/customer-care/how-it-works': typeof CustomerCareHowItWorksRoute
   '/customer-care/our-commitment': typeof CustomerCareOurCommitmentRoute
   '/customer-care/privacy-policy': typeof CustomerCarePrivacyPolicyRoute
@@ -750,6 +757,7 @@ export interface FileRoutesByTo {
   '/customer-care/contact-us': typeof CustomerCareContactUsRoute
   '/customer-care/cookie-policy': typeof CustomerCareCookiePolicyRoute
   '/customer-care/faqs': typeof CustomerCareFaqsRoute
+  '/customer-care/gift-cards': typeof CustomerCareGiftCardsRoute
   '/customer-care/how-it-works': typeof CustomerCareHowItWorksRoute
   '/customer-care/our-commitment': typeof CustomerCareOurCommitmentRoute
   '/customer-care/privacy-policy': typeof CustomerCarePrivacyPolicyRoute
@@ -850,6 +858,7 @@ export interface FileRoutesById {
   '/customer-care/contact-us': typeof CustomerCareContactUsRoute
   '/customer-care/cookie-policy': typeof CustomerCareCookiePolicyRoute
   '/customer-care/faqs': typeof CustomerCareFaqsRoute
+  '/customer-care/gift-cards': typeof CustomerCareGiftCardsRoute
   '/customer-care/how-it-works': typeof CustomerCareHowItWorksRoute
   '/customer-care/our-commitment': typeof CustomerCareOurCommitmentRoute
   '/customer-care/privacy-policy': typeof CustomerCarePrivacyPolicyRoute
@@ -951,6 +960,7 @@ export interface FileRouteTypes {
     | '/customer-care/contact-us'
     | '/customer-care/cookie-policy'
     | '/customer-care/faqs'
+    | '/customer-care/gift-cards'
     | '/customer-care/how-it-works'
     | '/customer-care/our-commitment'
     | '/customer-care/privacy-policy'
@@ -1039,6 +1049,7 @@ export interface FileRouteTypes {
     | '/customer-care/contact-us'
     | '/customer-care/cookie-policy'
     | '/customer-care/faqs'
+    | '/customer-care/gift-cards'
     | '/customer-care/how-it-works'
     | '/customer-care/our-commitment'
     | '/customer-care/privacy-policy'
@@ -1138,6 +1149,7 @@ export interface FileRouteTypes {
     | '/customer-care/contact-us'
     | '/customer-care/cookie-policy'
     | '/customer-care/faqs'
+    | '/customer-care/gift-cards'
     | '/customer-care/how-it-works'
     | '/customer-care/our-commitment'
     | '/customer-care/privacy-policy'
@@ -1614,6 +1626,13 @@ declare module '@tanstack/react-router' {
       path: '/faqs'
       fullPath: '/customer-care/faqs'
       preLoaderRoute: typeof CustomerCareFaqsRouteImport
+      parentRoute: typeof CustomerCareRoute
+    }
+    '/customer-care/gift-cards': {
+      id: '/customer-care/gift-cards'
+      path: '/gift-cards'
+      fullPath: '/customer-care/gift-cards'
+      preLoaderRoute: typeof CustomerCareGiftCardsRouteImport
       parentRoute: typeof CustomerCareRoute
     }
     '/customer-care/how-it-works': {
@@ -2121,6 +2140,7 @@ interface CustomerCareRouteChildren {
   CustomerCareContactUsRoute: typeof CustomerCareContactUsRoute
   CustomerCareCookiePolicyRoute: typeof CustomerCareCookiePolicyRoute
   CustomerCareFaqsRoute: typeof CustomerCareFaqsRoute
+  CustomerCareGiftCardsRoute: typeof CustomerCareGiftCardsRoute
   CustomerCareHowItWorksRoute: typeof CustomerCareHowItWorksRoute
   CustomerCareOurCommitmentRoute: typeof CustomerCareOurCommitmentRoute
   CustomerCarePrivacyPolicyRoute: typeof CustomerCarePrivacyPolicyRoute
@@ -2137,6 +2157,7 @@ const CustomerCareRouteChildren: CustomerCareRouteChildren = {
   CustomerCareContactUsRoute: CustomerCareContactUsRoute,
   CustomerCareCookiePolicyRoute: CustomerCareCookiePolicyRoute,
   CustomerCareFaqsRoute: CustomerCareFaqsRoute,
+  CustomerCareGiftCardsRoute: CustomerCareGiftCardsRoute,
   CustomerCareHowItWorksRoute: CustomerCareHowItWorksRoute,
   CustomerCareOurCommitmentRoute: CustomerCareOurCommitmentRoute,
   CustomerCarePrivacyPolicyRoute: CustomerCarePrivacyPolicyRoute,
@@ -2203,3 +2224,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

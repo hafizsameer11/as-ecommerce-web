@@ -3,6 +3,9 @@ import { useEffect, useState } from "react";
 import { MobileShell } from "@/components/shell/MobileShell";
 import { DesktopShell } from "@/components/shell/DesktopShell";
 import { ComingSoonContent } from "@/components/coming-soon/ComingSoonContent";
+import { PUBLIC_SETTINGS_DEFAULTS } from "@/lib/public-settings-format";
+
+const depositPctDefault = PUBLIC_SETTINGS_DEFAULTS.drops.depositPctDefault;
 
 export const Route = createFileRoute("/coming-soon")({
   head: () => ({
@@ -11,12 +14,12 @@ export const Route = createFileRoute("/coming-soon")({
       {
         name: "description",
         content:
-          "Preview upcoming luxury drops and reserve your size with a 50% deposit. Balance payable on release day.",
+          `Preview upcoming luxury drops and reserve your size with a ${depositPctDefault}% deposit. Balance payable on release day.`,
       },
       { property: "og:title", content: "Coming Soon - Reserve Upcoming Drops | ASL ORIGINALS" },
       {
         property: "og:description",
-        content: "Secure upcoming footwear, fashion and fragrance drops with a 50% deposit.",
+        content: `Secure upcoming footwear, fashion and fragrance drops with a ${depositPctDefault}% deposit.`,
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
