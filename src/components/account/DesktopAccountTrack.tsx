@@ -9,6 +9,7 @@ import { AccountSidebar } from "./AccountSidebar";
 import { fadeInUp, buttonTap } from "@/lib/motion";
 import { orderStatusStyle } from "./ordersData";
 import { loadOrderTracking, type TrackView } from "@/lib/order-tracking";
+import { openCourierTracking } from "@/lib/courier-tracking";
 import { ApiError } from "@/lib/api/client";
 import { usePublicSettings } from "@/lib/api/settings";
 
@@ -197,6 +198,15 @@ function TrackingCard({ view }: { view: TrackView }) {
               <span className="text-muted-foreground">{view.carrier ? `${view.carrier} · ` : ""}Tracking:</span>{" "}
               <span className="font-semibold">{view.trackingNumber}</span>
             </div>
+          )}
+          {view.trackingUrl && (
+            <button
+              type="button"
+              onClick={() => openCourierTracking(view.trackingUrl!)}
+              className="mt-3 inline-flex items-center gap-1.5 rounded bg-ink px-3 py-2 text-[10.5px] font-semibold uppercase tracking-widest text-white"
+            >
+              Track on {view.carrier || "courier"}
+            </button>
           )}
         </div>
       </div>

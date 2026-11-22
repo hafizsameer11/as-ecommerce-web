@@ -36,7 +36,45 @@ export function saveCookieConsent(preferences: Omit<CookieConsent, "essential" |
   };
   window.localStorage.setItem(COOKIE_CONSENT_KEY, JSON.stringify(consent));
   window.dispatchEvent(new CustomEvent("asl:cookie-consent-updated", { detail: consent }));
+  void postCookieConsentToServer(preferences);
   void syncCookieConsentToAccount(preferences);
+}
+
+const ANON_ID_KEY = "asl-anon-id";
+
+function anonId(): string {
+  try {
+    let id = window.localStorage.getItem(ANON_ID_KEY);
+    if (!id) {
+      id =
+        typeof crypto !== "undefined" && "randomUUID" in crypto
+          ? crypto.randomUUID()
+          : `anon_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+      window.localStorage.setItem(ANON_ID_KEY, id);
+    }
+    return id.slice(0, 64);
+  } catch {
+    return `anon_${Date.now()}`;
+  }
+}
+
+/** Record consent choices for compliance (server links to the customer when signed in). */
+export async function postCookieConsentToServer(
+  preferences: Omit<CookieConsent, "essential" | "savedAt">
+) {
+  try {
+    const { appConfigStoreApi } = await import("@/lib/api/platform");
+    await appConfigStoreApi.saveConsent({
+      anonId: anonId(),
+      choices: {
+        performance: preferences.performance,
+        functional: preferences.functional,
+        advertising: preferences.advertising,
+      },
+    });
+  } catch (err) {
+    console.warn("[cookie-consent] POST /store/app/consent failed", err);
+  }
 }
 
 /** When signed in, mirror cookie choices onto customer privacy preferences. */

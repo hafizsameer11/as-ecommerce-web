@@ -3,6 +3,7 @@ import { goToLabel } from "@/lib/nav-resolve";
 import { motion } from "framer-motion";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
+import { openCourierTracking } from "@/lib/courier-tracking";
 import { ShoppingBag, Search, User, MapPin, Copy, ChevronDown, ArrowRight } from "lucide-react";
 import { fadeInUp, buttonTap } from "@/lib/motion";
 import { trackSteps, trackTrust, helpOptions, statusToStepIndex } from "./trackData";
@@ -66,6 +67,7 @@ export function DesktopTrackRequest({ id, email: emailParam }: { id?: string; em
     status: notFound ? "NOT FOUND" : "—",
     tracking: "",
     courier: "",
+    trackingUrl: null as string | null,
     estimated: notFound ? "We couldn't find that request." : "Track a request to see live status.",
     image: productImg,
     trackStep: 0,
@@ -283,10 +285,12 @@ export function DesktopTrackRequest({ id, email: emailParam }: { id?: string; em
               <div className="text-[10px] text-muted-foreground">Courier</div>
               <div className="text-[11.5px] font-semibold text-ink">{active.courier}</div>
             </div>
-            <button onClick={() => toast("Opening DHL…")}
-              className="bg-ink text-white px-4 py-2.5 text-[10.5px] font-semibold tracking-[0.18em] rounded">
-              TRACK ON DHL
-            </button>
+            {active.trackingUrl && (
+              <button onClick={() => openCourierTracking(active.trackingUrl!)}
+                className="bg-ink text-white px-4 py-2.5 text-[10.5px] font-semibold tracking-[0.18em] rounded uppercase">
+                Track on {active.courier || "courier"}
+              </button>
+            )}
           </div>
         </div>
 

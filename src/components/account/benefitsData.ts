@@ -6,15 +6,17 @@ export type Benefit = {
   id: string;
   title: string;
   desc: string;
+  /** Where tapping the benefit takes the member */
+  to: string;
   Icon: ComponentType<SVGProps<SVGSVGElement> & { strokeWidth?: number }>;
 };
 
 export const benefits: Benefit[] = [
-  { id: "priority", title: "Priority Access", desc: "Get early access to limited releases and exclusive items.", Icon: Compass },
-  { id: "concierge", title: "Dedicated Concierge", desc: "Enjoy personal support from your dedicated concierge team.", Icon: Headset },
-  { id: "offers", title: "Special Offers", desc: "Receive exclusive member-only offers and promotions.", Icon: Gift },
-  { id: "shipping", title: "Free Priority Shipping", desc: "Enjoy free and faster shipping on all eligible orders.", Icon: Truck },
-  { id: "authenticity", title: "Authenticity Guarantee", desc: "100% authentic products and secure sourcing.", Icon: StrokeRosetteCheckIcon },
+  { id: "priority", title: "Priority Access", desc: "Get early access to limited releases and exclusive items.", to: "/coming-soon", Icon: Compass },
+  { id: "concierge", title: "Dedicated Concierge", desc: "Enjoy personal support from your dedicated concierge team.", to: "/start-request", Icon: Headset },
+  { id: "offers", title: "Special Offers", desc: "Receive exclusive member-only offers and promotions.", to: "/account/rewards", Icon: Gift },
+  { id: "shipping", title: "Free Priority Shipping", desc: "Enjoy free and faster shipping on all eligible orders.", to: "/customer-care/shipping-policy", Icon: Truck },
+  { id: "authenticity", title: "Authenticity Guarantee", desc: "100% authentic products and secure sourcing.", to: "/customer-care/our-commitment", Icon: StrokeRosetteCheckIcon },
 ];
 
 export const moreBenefits = {

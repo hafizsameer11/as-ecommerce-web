@@ -21,7 +21,7 @@ type State = {
   hydrate: () => Promise<void>;
   credit: (amount: number, title: string, sub?: string) => void;
   debit: (amount: number, title: string, sub?: string) => boolean;
-  topup: (amountNaira: number, returnUrl?: string) => Promise<{ authorizationUrl?: string | null; reference: string }>;
+  topup: (amountNaira: number, method: "card" | "bank_transfer", returnUrl?: string) => Promise<{ authorizationUrl?: string | null; reference: string }>;
   withdraw: (amountNaira: number, bankAccountId: string) => Promise<void>;
 };
 
@@ -98,10 +98,10 @@ export const useWallet = create<State>()(
         }));
         return true;
       },
-      topup: async (amountNaira, returnUrl) => {
+      topup: async (amountNaira, method, returnUrl) => {
         const res = await accountApi.walletTopup({
           amount: nairaToKobo(amountNaira),
-          method: "card",
+          method,
           returnUrl,
         });
         return res;

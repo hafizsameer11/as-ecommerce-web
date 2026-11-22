@@ -4,6 +4,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Link, useLocation } from "@tanstack/react-router";
 import { Search, User, Heart, ShoppingBag, Facebook, Instagram, Twitter, ChevronDown, Shirt, Footprints, ShoppingBasket, SprayCan, ArrowRight, Menu, X, Smartphone } from "lucide-react";
 import { toast } from "sonner";
+import { openAppStore } from "@/lib/app-store";
+import { subscribeNewsletter } from "@/lib/newsletter";
 import { fadeInUp, buttonTap, staggerContainer, staggerItem } from "@/lib/motion";
 import { useCartCount } from "@/lib/cart-store";
 import { useWishlistCount } from "@/lib/wishlist";
@@ -439,10 +441,10 @@ export function DesktopShell({
             </p>
           </div>
           <div className="flex gap-3">
-            <motion.button whileHover={{ y: -2 }} whileTap="tap" variants={buttonTap} onClick={() => toast("Coming soon")} className="bg-ink text-white px-5 py-3 text-xs uppercase tracking-widest">
+            <motion.button whileHover={{ y: -2 }} whileTap="tap" variants={buttonTap} onClick={openAppStore} className="bg-ink text-white px-5 py-3 text-xs uppercase tracking-widest">
               ▶ Google Play
             </motion.button>
-            <motion.button whileHover={{ y: -2 }} whileTap="tap" variants={buttonTap} onClick={() => toast("Coming soon")} className="bg-ink text-white px-5 py-3 text-xs uppercase tracking-widest">
+            <motion.button whileHover={{ y: -2 }} whileTap="tap" variants={buttonTap} onClick={openAppStore} className="bg-ink text-white px-5 py-3 text-xs uppercase tracking-widest">
                App Store
             </motion.button>
           </div>
@@ -463,8 +465,18 @@ export function DesktopShell({
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
-                  toast("Subscribed " + email);
-                  setEmail("");
+                  void subscribeNewsletter(email)
+                    .then((res) => {
+                      if (res.status === "subscribed") {
+                        toast.success("You're subscribed to ASL ORIGINALS updates");
+                      } else {
+                        toast("We'll email you when newsletters open", {
+                          description: "Sign in or create an account to opt in to updates right away.",
+                        });
+                      }
+                      setEmail("");
+                    })
+                    .catch((err) => toast.error(err instanceof Error ? err.message : "Could not subscribe"));
                 }}
                 className="relative w-full"
               >

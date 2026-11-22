@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { koboToNaira } from "@/lib/api/client";
+import { courierTrackingUrl } from "@/lib/courier-tracking";
 import {
   loyaltyApi,
   type ApiConciergeCart,
@@ -151,8 +152,9 @@ export function trackToActive(track: ApiConciergeTrack, fallbackImage: string) {
     size: track.size || "One size",
     color: track.color || "As described",
     status: (track.status || "SOURCING").toUpperCase(),
-    tracking: track.number,
-    courier: "ASL Concierge",
+    tracking: track.trackingNumber || track.number,
+    courier: track.carrier || "ASL Concierge",
+    trackingUrl: courierTrackingUrl(track.carrier, track.trackingNumber, track.trackingUrl),
     estimated: track.statusNote || "",
     image: track.image || fallbackImage,
     trackStep: track.trackStep ?? 0,

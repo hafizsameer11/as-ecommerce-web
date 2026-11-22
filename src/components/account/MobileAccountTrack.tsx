@@ -8,6 +8,7 @@ import { MobileShell } from "@/components/shell/MobileShell";
 import { orderStatusStyle } from "./ordersData";
 import { buttonTap } from "@/lib/motion";
 import { loadOrderTracking, type TrackView } from "@/lib/order-tracking";
+import { openCourierTracking } from "@/lib/courier-tracking";
 import { ApiError } from "@/lib/api/client";
 import { usePublicSettings } from "@/lib/api/settings";
 
@@ -208,6 +209,15 @@ function MobileTrackingCard({ view }: { view: TrackView }) {
                 </>
               )}
             </div>
+          )}
+          {view.trackingUrl && (
+            <button
+              type="button"
+              onClick={() => openCourierTracking(view.trackingUrl!)}
+              className="mt-3 w-full rounded border border-ink py-2.5 text-[10.5px] font-semibold uppercase tracking-widest text-ink"
+            >
+              Track on {view.carrier || "courier"}
+            </button>
           )}
           {items.length > 0 && (
             <div className="mt-3 divide-y divide-border">

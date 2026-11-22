@@ -20,7 +20,6 @@ import {
   Truck,
   LucideIcon,
 } from "lucide-react";
-import { toast } from "sonner";
 import { MobileShell } from "@/components/shell/MobileShell";
 import { overviewBenefits, mobileConciergeList, type MenuItem } from "./accountData";
 import { useEffect } from "react";
@@ -30,6 +29,7 @@ import { formatNaira, orderStatusStyle } from "./ordersData";
 import { useAllOrders, useOrders } from "@/lib/orders-store";
 import { useAccountDisplayName } from "@/lib/auth-store";
 import { useNotifications } from "./notificationsData";
+import { useAccountOverviewStats } from "./overviewStats";
 import aslBag from "@/assets/asl-bag.png";
 import { fadeInUp } from "@/lib/motion";
 
@@ -43,12 +43,16 @@ export function MobileAccount() {
   const hydrate = useClubRewards((s) => s.hydrate);
   const hydrateNotifs = useNotifications((s) => s.hydrate);
   const rewardsSummary = useClubRewards((s) => s.summary);
+  const stats = useAccountOverviewStats();
+  const walletBalance = useWallet((s) => s.balance);
+  const hydrateWallet = useWallet((s) => s.hydrate);
 
   useEffect(() => {
+    void hydrateWallet();
     void hydrate();
     void hydrateNotifs();
     void hydrateOrders();
-  }, [hydrate, hydrateNotifs, hydrateOrders]);
+  }, [hydrate, hydrateNotifs, hydrateOrders, hydrateWallet]);
 
   const tierPct = Math.min(
     100,
@@ -104,7 +108,7 @@ export function MobileAccount() {
           {/* mini stats inside hero */}
           <div className="relative mt-4 grid grid-cols-2 gap-2">
             <MiniStat Icon={Star} label="Points" value={rewardsSummary.points.toLocaleString()} to="/account/rewards" />
-            <MiniStat Icon={Wallet} label="Wallet" value={formatNaira(useWallet.getState().balance)} to="/account/wallet" />
+            <MiniStat Icon={Wallet} label="Wallet" value={formatNaira(walletBalance)} to="/account/wallet" />
           </div>
         </motion.section>
 
@@ -112,9 +116,9 @@ export function MobileAccount() {
         <motion.div variants={fadeInUp} initial="hidden" animate="visible">
           <div className="grid grid-cols-4 gap-2">
             <QuickTile Icon={Package} label="Orders" to="/account/orders" />
-            <QuickTile Icon={Heart} label="Wishlist" to="/account/wishlist" badge="4" />
+            <QuickTile Icon={Heart} label="Wishlist" to="/account/wishlist" badge={String(stats.wishlistCount)} />
             <QuickTile Icon={RefreshCw} label="Returns" to="/account/returns" />
-            <QuickTile Icon={Bell} label="Alerts" to="/account/notifications" badge={String(unread.length)} />
+            <QuickTile Icon={Bell} label="Alerts" to="/account/notifications" badge={String(stats.unreadCount)} />
             <QuickTile Icon={MapPin} label="Address" to="/account/addresses" />
             <QuickTile Icon={Gift} label="Rewards" to="/account/rewards" />
             <QuickTile Icon={Wallet} label="Wallet" to="/account/wallet" />
@@ -269,12 +273,12 @@ export function MobileAccount() {
               <p className="text-[12px] text-white/60 mt-2 leading-relaxed">
                 We're here to give you the best experience.
               </p>
-              <button
-                onClick={() => toast("Shop New Arrivals")}
+              <Link
+                to="/new-arrivals"
                 className="mt-4 bg-gold text-white text-[12px] font-semibold px-5 py-2.5 rounded-full inline-flex items-center gap-1.5 active:scale-95 transition-transform whitespace-nowrap"
               >
                 Shop New Arrivals <ChevronRight className="h-3.5 w-3.5" />
-              </button>
+              </Link>
             </div>
             <img
               src={aslBag}

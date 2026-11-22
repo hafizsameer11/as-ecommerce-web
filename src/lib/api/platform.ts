@@ -9,6 +9,10 @@ export type DownloadOfferConfig = {
 
 export const appConfigStoreApi = {
   get: () => apiRequest<Record<string, unknown>>("/store/app/config"),
+  saveConsent: (body: {
+    anonId: string;
+    choices: { performance: boolean; functional: boolean; advertising: boolean };
+  }) => apiRequest("/store/app/consent", { method: "POST", body }),
   claimDownloadOffer: () =>
     apiRequest<{
       code: string;

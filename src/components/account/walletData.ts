@@ -1,4 +1,4 @@
-import { Plus, ArrowUp, ArrowDown, CreditCard, FileText, LucideIcon } from "lucide-react";
+import { Plus, ArrowUp, CreditCard, Landmark, LucideIcon } from "lucide-react";
 
 export const walletSummary = {
   balance: 25000,
@@ -18,7 +18,7 @@ export const quickActions: QuickAction[] = [
   { id: "add", label: "Add Money", desc: "Top up your wallet", Icon: Plus, to: "/account/wallet/topup" },
   { id: "withdraw", label: "Withdraw", desc: "Withdraw to bank", Icon: ArrowUp, to: "/account/wallet/withdraw" },
   { id: "methods", label: "Payment Methods", desc: "Manage your cards", Icon: CreditCard, to: "/account/payment-methods" },
-  { id: "history", label: "Transaction History", desc: "View all transactions", Icon: FileText },
+  { id: "banks", label: "Bank Accounts", desc: "Manage payout accounts", Icon: Landmark, to: "/account/wallet/bank-accounts" },
 ];
 
 

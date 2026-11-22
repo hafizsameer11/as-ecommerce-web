@@ -153,11 +153,7 @@ export function MobilePaymentMethods() {
             {otherMethods.map((m) => (
               <button
                 key={m.id}
-                onClick={() =>
-                  m.id === "new-card"
-                    ? nav({ to: "/account/payment-methods/new" })
-                    : toast(m.label, { description: m.desc })
-                }
+                onClick={() => nav({ to: m.to })}
                 className="w-full flex items-center gap-4 px-4 py-3.5 border-b border-border last:border-0 hover:bg-muted/20 text-left"
               >
                 <m.Icon className="h-5 w-5 text-foreground shrink-0" strokeWidth={1.5} />

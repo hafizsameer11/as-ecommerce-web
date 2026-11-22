@@ -112,6 +112,13 @@ export const cmsApi = {
   feedback: (body: { type: "idea" | "bug" | "praise"; area?: string; message: string; email?: string }) =>
     apiRequest("/store/feedback", { method: "POST", body }),
 
+  /** Footer / marketing newsletter — guests become NewsletterLead; known emails get marketingOptIn. */
+  subscribeNewsletter: (email: string) =>
+    apiRequest<{ subscribed: boolean }>("/store/marketing/newsletter", {
+      method: "POST",
+      body: { email },
+    }),
+
   banners: (query: { placement?: string; device?: "mobile" | "desktop" } = {}) =>
     apiRequest<StoreBanner[]>(`/store/banners${qs(query)}`),
 

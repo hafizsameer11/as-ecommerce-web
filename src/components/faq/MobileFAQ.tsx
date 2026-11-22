@@ -6,6 +6,7 @@ import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { Menu, ShoppingBag, Home, Grid3x3, Plus, MapPin, User, MessageCircle, Mail } from "lucide-react";
 import { useStoreFaqs } from "@/lib/faq-store";
+import { FaqHelpful } from "./FaqHelpful";
 import helpImg from "@/assets/faq-help.jpg";
 
 const GOLD = "#cc5000";
@@ -93,7 +94,7 @@ export function MobileFAQ() {
               <AnimatePresence initial={false}>
                 {isOpen && (
                   <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }} className="overflow-hidden">
-                    <div className="px-3.5 pb-3.5 pl-9 text-[11.5px] text-muted-foreground leading-relaxed">{item.a}</div>
+                    <div className="px-3.5 pb-3.5 pl-9 text-[11.5px] text-muted-foreground leading-relaxed">{item.a}<FaqHelpful id={item.id} compact /></div>
                   </motion.div>
                 )}
               </AnimatePresence>

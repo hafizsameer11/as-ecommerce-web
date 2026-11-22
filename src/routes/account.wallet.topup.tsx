@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Toaster, toast } from "sonner";
-import { CreditCard, Building2, Wallet as WalletIcon } from "lucide-react";
+import { CreditCard, Building2 } from "lucide-react";
 import { AccountInnerScaffold } from "@/components/account/AccountInnerScaffold";
 import { useWallet } from "@/lib/wallet-store";
 import { usePublicSettings } from "@/lib/api/settings";
 import { walletMinTopupNaira } from "@/lib/public-settings-format";
+import { openPaymentAndVerify } from "@/lib/open-payment";
 
 export const Route = createFileRoute("/account/wallet/topup")({
   head: () => ({ meta: [{ title: "Top Up Wallet - ASL ORIGINALS" }, { name: "description", content: "Add funds to your ASL ORIGINALS wallet." }] }),
@@ -18,25 +19,30 @@ const NGN = new Intl.NumberFormat("en-NG");
 function TopUp() {
   const nav = useNavigate();
   const topup = useWallet((s) => s.topup);
+  const hydrateWallet = useWallet((s) => s.hydrate);
   const { data: publicSettings } = usePublicSettings();
   const minTopup = walletMinTopupNaira(publicSettings);
   const [amount, setAmount] = useState(25000);
-  const [method, setMethod] = useState<"card" | "bank" | "paypal">("card");
+  const [method, setMethod] = useState<"card" | "bank_transfer">("card");
   const [busy, setBusy] = useState(false);
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (amount < minTopup) return toast.error(`Minimum top-up is ₦${NGN.format(minTopup)}`);
-    if (method === "paypal") return toast.error("PayPal is not available yet — use card or transfer");
     if (busy) return;
     setBusy(true);
     try {
       const returnUrl = `${window.location.origin}/account/wallet`;
-      const res = await topup(amount, returnUrl);
+      const res = await topup(amount, method, returnUrl);
       if (res.authorizationUrl) {
-        toast.success("Redirecting to payment…");
-        window.location.href = res.authorizationUrl;
+        toast.success("Complete the payment in the secure checkout window…");
+        // Open checkout, then verify the reference so the credit lands before we go back to the wallet.
+        await openPaymentAndVerify(res.authorizationUrl, res.reference);
+        await hydrateWallet();
+        toast.success(`Wallet top-up of ₦${NGN.format(amount)} submitted`);
+        nav({ to: "/account/wallet" });
         return;
       }
+      await hydrateWallet();
       toast.success(`Wallet topped up with ₦${NGN.format(amount)}`);
       nav({ to: "/account/wallet" });
     } catch (err) {
@@ -62,8 +68,8 @@ function TopUp() {
           </div>
           <div>
             <label className="text-[11px] uppercase tracking-widest text-muted-foreground font-bold">Payment Method</label>
-            <div className="mt-2 grid grid-cols-3 gap-2">
-              {([{ v: "card", l: "Card", I: CreditCard }, { v: "bank", l: "Transfer", I: Building2 }, { v: "paypal", l: "PayPal", I: WalletIcon }] as const).map(({ v, l, I }) => (
+            <div className="mt-2 grid grid-cols-2 gap-2">
+              {([{ v: "card", l: "Card", I: CreditCard }, { v: "bank_transfer", l: "Bank transfer", I: Building2 }] as const).map(({ v, l, I }) => (
                 <button key={v} type="button" onClick={() => setMethod(v)} className={`flex flex-col items-center gap-1.5 py-3 rounded-md border ${method === v ? "bg-ink text-white border-ink" : "bg-white border-border"}`}>
                   <I className="h-5 w-5" />
                   <span className="text-[12px] font-semibold">{l}</span>

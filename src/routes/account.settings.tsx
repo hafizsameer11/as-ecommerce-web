@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth-store";
 import { storeAuthApi } from "@/lib/api/auth";
 import { cmsApi } from "@/lib/api/cms";
+import { deleteMyAccount } from "@/lib/account-delete";
 
 export const Route = createFileRoute("/account/settings")({
   head: () => ({
@@ -127,6 +128,9 @@ function Body() {
   const [logoutOpen, setLogoutOpen] = useState(false);
   const [delOpen, setDelOpen] = useState(false);
   const [delText, setDelText] = useState("");
+  const [delPassword, setDelPassword] = useState("");
+  const [delBusy, setDelBusy] = useState(false);
+  const [twoFactorOn, setTwoFactorOn] = useState(false);
 
   const [analytics, setAnalytics] = useState(true);
   const [personalize, setPersonalize] = useState(true);
@@ -139,6 +143,7 @@ function Body() {
     void storeAuthApi
       .me()
       .then((me) => {
+        setTwoFactorOn(!!me.twoFactorEnabled);
         setLang(me.preferences?.language || "English");
         setCurrency(currencyLabel(me.preferences?.currency));
         setAnalytics(me.preferences?.privacy?.analytics ?? true);
@@ -200,7 +205,7 @@ function Body() {
 
       <Section title="Privacy & Security">
         <Row label="Change Password" desc="Update your account password" Icon={Lock} onClick={() => nav({ to: "/account/security" })} />
-        <Row label="Two-Factor Authentication" desc="Extra layer of protection" Icon={Shield} value="Off" onClick={() => nav({ to: "/account/security" })} />
+        <Row label="Two-Factor Authentication" desc="Extra layer of protection" Icon={Shield} value={twoFactorOn ? "On" : "Off"} onClick={() => nav({ to: "/account/security" })} />
         <Row label="Privacy Settings" desc="Control your data & visibility" Icon={Eye} onClick={() => setPrivOpen(true)} />
       </Section>
 
@@ -264,7 +269,7 @@ function Body() {
       </Dialog>
 
       {/* Delete */}
-      <Dialog open={delOpen} onOpenChange={(o) => { setDelOpen(o); if (!o) setDelText(""); }}>
+      <Dialog open={delOpen} onOpenChange={(o) => { setDelOpen(o); if (!o) { setDelText(""); setDelPassword(""); } }}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="text-rose-600">Delete Account</DialogTitle>
@@ -276,14 +281,32 @@ function Body() {
             placeholder="Type DELETE"
             className="w-full rounded-md border border-border px-3 py-2 text-sm"
           />
+          <input
+            type="password"
+            value={delPassword}
+            onChange={(e) => setDelPassword(e.target.value)}
+            placeholder="Confirm with your password"
+            autoComplete="current-password"
+            className="w-full rounded-md border border-border px-3 py-2 text-sm"
+          />
           <DialogFooter className="gap-2">
             <Button variant="outline" onClick={() => setDelOpen(false)}>Cancel</Button>
             <Button
-              disabled={delText !== "DELETE"}
-              onClick={() => { setDelOpen(false); signOut(); toast.success("Account deletion requested"); nav({ to: "/" }); }}
+              disabled={delText !== "DELETE" || delBusy}
+              onClick={() => {
+                setDelBusy(true);
+                void deleteMyAccount(delPassword)
+                  .then(() => {
+                    setDelOpen(false);
+                    toast.success("Account deleted");
+                    nav({ to: "/" });
+                  })
+                  .catch((err) => toast.error(err instanceof Error ? err.message : "Could not delete account"))
+                  .finally(() => setDelBusy(false));
+              }}
               className="bg-rose-600 hover:bg-rose-700 text-white"
             >
-              Delete Permanently
+              {delBusy ? "Deleting…" : "Delete Permanently"}
             </Button>
           </DialogFooter>
         </DialogContent>

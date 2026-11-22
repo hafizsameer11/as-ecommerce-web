@@ -5,7 +5,9 @@ import { motion } from "framer-motion";
 import { Shield, Smartphone, Key, Monitor, AlertTriangle, Check, LogOut } from "lucide-react";
 import { AccountInnerScaffold } from "@/components/account/AccountInnerScaffold";
 import { fadeInUp } from "@/lib/motion";
+import { useNavigate } from "@tanstack/react-router";
 import { storeAuthApi, type ApiSession } from "@/lib/api/auth";
+import { deleteMyAccount } from "@/lib/account-delete";
 import {
   Dialog,
   DialogContent,
@@ -35,6 +37,10 @@ function formatWhen(iso: string, current?: boolean) {
 }
 
 function Security() {
+  const nav = useNavigate();
+  const [delOpen, setDelOpen] = useState(false);
+  const [delPassword, setDelPassword] = useState("");
+  const [delBusy, setDelBusy] = useState(false);
   const [twoFA, setTwoFA] = useState(false);
   const [sessions, setSessions] = useState<ApiSession[]>([]);
   const [pw, setPw] = useState({ current: "", next: "", confirm: "" });
@@ -224,14 +230,7 @@ function Security() {
           </div>
           <button
             type="button"
-            onClick={async () => {
-              try {
-                await storeAuthApi.deleteAccount({ confirm: "DELETE" });
-                toast.success("Account deleted");
-              } catch (err) {
-                toast.error(err instanceof Error ? err.message : "Contact support to delete your account");
-              }
-            }}
+            onClick={() => setDelOpen(true)}
             className="mt-3 h-9 px-4 rounded-md border border-rose-300 bg-white text-rose-600 text-[12px] font-semibold hover:bg-rose-100"
           >
             Delete Account
@@ -260,6 +259,45 @@ function Security() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setTotpOpen(false)}>Cancel</Button>
             <Button onClick={() => void confirmTotp()}>Confirm</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={delOpen} onOpenChange={(o) => { setDelOpen(o); if (!o) setDelPassword(""); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="text-rose-600">Delete Account</DialogTitle>
+          </DialogHeader>
+          <p className="text-[12px] text-muted-foreground">
+            This closes your account and removes your personal data after the grace period. Enter your password to confirm.
+          </p>
+          <input
+            type="password"
+            value={delPassword}
+            onChange={(e) => setDelPassword(e.target.value)}
+            placeholder="Your password"
+            autoComplete="current-password"
+            className="w-full h-11 px-3 rounded-md border border-border bg-white text-[13px]"
+          />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDelOpen(false)}>Cancel</Button>
+            <Button
+              disabled={delBusy}
+              className="bg-rose-600 hover:bg-rose-700 text-white"
+              onClick={() => {
+                setDelBusy(true);
+                void deleteMyAccount(delPassword)
+                  .then(() => {
+                    setDelOpen(false);
+                    toast.success("Account deleted");
+                    nav({ to: "/" });
+                  })
+                  .catch((err) => toast.error(err instanceof Error ? err.message : "Could not delete account"))
+                  .finally(() => setDelBusy(false));
+              }}
+            >
+              {delBusy ? "Deleting…" : "Delete Permanently"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { goToLabel } from "@/lib/nav-resolve";
 import {
@@ -13,12 +14,25 @@ import {
   MessageSquare,
 } from "lucide-react";
 import { motion } from "framer-motion";
-import { toast } from "sonner";
 import { DesktopShell } from "@/components/shell/DesktopShell";
 import { AccountSidebar } from "./AccountSidebar";
 import { useIsDesktop } from "@/hooks/use-breakpoint";
 import { fadeInUp, staggerContainer, staggerItem, buttonTap } from "@/lib/motion";
 import { InfoItem } from "./returnsInnerData";
+import { usePublicSettings } from "@/lib/api/settings";
+import { storeProfileContact } from "@/lib/public-settings-format";
+import { useNotifications } from "./notificationsData";
+
+/** WhatsApp / Email open real deep links from store settings; Live Chat opens the support form. */
+function useSupportActions(navigate: ReturnType<typeof useNavigate>) {
+  const { data: publicSettings } = usePublicSettings();
+  const contact = storeProfileContact(publicSettings);
+  return [
+    { Icon: MessageCircle, label: "WhatsApp", run: () => window.open(contact.whatsappUrl, "_blank", "noopener,noreferrer") },
+    { Icon: Mail, label: "Email", run: () => { window.location.href = contact.mailtoUrl; } },
+    { Icon: MessageSquare, label: "Live Chat", run: () => void navigate({ to: "/account/help/contact" }) },
+  ];
+}
 
 type Props = {
   title: string;
@@ -56,6 +70,8 @@ function ItemRow({ Icon, title, body, number }: InfoItem & { number?: number }) 
 }
 
 function DesktopContent({ title, intro, items, numbered, footer }: Props) {
+  const navigate = useNavigate();
+  const supportActions = useSupportActions(navigate);
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -92,14 +108,10 @@ function DesktopContent({ title, intro, items, numbered, footer }: Props) {
         <div className="rounded-xl border border-border bg-card p-6">
           <div className="font-display text-lg font-bold">Contact Support</div>
           <div className="mt-4 grid grid-cols-3 gap-4">
-            {[
-              { Icon: MessageCircle, label: "WhatsApp" },
-              { Icon: Mail, label: "Email" },
-              { Icon: MessageSquare, label: "Live Chat" },
-            ].map((c) => (
+            {supportActions.map((c) => (
               <button
                 key={c.label}
-                onClick={() => toast(c.label)}
+                onClick={c.run}
                 className="flex items-center justify-center gap-2 py-3 rounded-md border border-border text-[13px] font-semibold hover:bg-muted/50"
               >
                 <c.Icon className="h-4 w-4 text-gold" strokeWidth={1.75} /> {c.label}
@@ -114,6 +126,13 @@ function DesktopContent({ title, intro, items, numbered, footer }: Props) {
 
 function MobileContent({ title, intro, items, numbered, footer, pageTitle }: Props & { pageTitle: string }) {
   const navigate = useNavigate();
+  const supportActions = useSupportActions(navigate);
+  const unreadCount = useNotifications((s) => s.unreadCount);
+  const notifsHydrated = useNotifications((s) => s.hydrated);
+  const hydrateNotifs = useNotifications((s) => s.hydrate);
+  useEffect(() => {
+    if (!notifsHydrated) void hydrateNotifs();
+  }, [notifsHydrated, hydrateNotifs]);
 
   return (
     <div className="relative min-h-screen bg-background pb-24">
@@ -135,14 +154,16 @@ function MobileContent({ title, intro, items, numbered, footer, pageTitle }: Pro
           <motion.button
             whileTap="tap"
             variants={buttonTap}
-            onClick={() => toast("No new notifications")}
+            onClick={() => navigate({ to: "/account/notifications" })}
             aria-label="Notifications"
             className="relative text-foreground"
           >
             <Bell className="h-6 w-6" strokeWidth={1.75} />
-            <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-sale text-white text-[9px] font-bold grid place-items-center">
-              0
-            </span>
+            {unreadCount > 0 && (
+              <span className="absolute -top-1 -right-1 min-w-4 h-4 px-1 rounded-full bg-sale text-white text-[9px] font-bold grid place-items-center">
+                {unreadCount > 99 ? "99+" : unreadCount}
+              </span>
+            )}
           </motion.button>
         </div>
       </div>
@@ -190,14 +211,10 @@ function MobileContent({ title, intro, items, numbered, footer, pageTitle }: Pro
             <div className="rounded-xl border border-border bg-card p-4">
               <div className="font-display text-base font-bold mb-3">Contact Support</div>
               <div className="grid grid-cols-3 gap-3">
-                {[
-                  { Icon: MessageCircle, label: "WhatsApp" },
-                  { Icon: Mail, label: "Email" },
-                  { Icon: MessageSquare, label: "Live Chat" },
-                ].map((c) => (
+                {supportActions.map((c) => (
                   <button
                     key={c.label}
-                    onClick={() => toast(c.label)}
+                    onClick={c.run}
                     className="flex flex-col items-center gap-2 py-3 rounded-md border border-border text-[11px] font-semibold hover:bg-muted/50"
                   >
                     <c.Icon className="h-5 w-5 text-gold" strokeWidth={1.6} />

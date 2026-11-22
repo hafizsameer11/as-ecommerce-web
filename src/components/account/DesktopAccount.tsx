@@ -18,7 +18,6 @@ import {
   Plus,
 } from "lucide-react";
 import { StrokeRosetteCheckIcon } from "@/components/home/TrustIcons";
-import { toast } from "sonner";
 import { DesktopShell } from "@/components/shell/DesktopShell";
 import { AccountSidebar } from "./AccountSidebar";
 import { overviewBenefits } from "./accountData";
@@ -29,6 +28,7 @@ import { formatNaira, orderStatusStyle } from "./ordersData";
 import { useAllOrders, useOrders } from "@/lib/orders-store";
 import { useAccountDisplayName } from "@/lib/auth-store";
 import { useNotifications } from "./notificationsData";
+import { useAccountOverviewStats } from "./overviewStats";
 import aslBag from "@/assets/asl-bag.png";
 import { fadeInUp, staggerContainer, staggerItem } from "@/lib/motion";
 
@@ -42,12 +42,17 @@ export function DesktopAccount() {
   const hydrate = useClubRewards((s) => s.hydrate);
   const hydrateNotifs = useNotifications((s) => s.hydrate);
   const rewardsSummary = useClubRewards((s) => s.summary);
+  const stats = useAccountOverviewStats();
+  const walletBalance = useWallet((s) => s.balance);
+  const walletTxCount = useWallet((s) => s.txns.length);
+  const hydrateWallet = useWallet((s) => s.hydrate);
 
   useEffect(() => {
+    void hydrateWallet();
     void hydrate();
     void hydrateNotifs();
     void hydrateOrders();
-  }, [hydrate, hydrateNotifs, hydrateOrders]);
+  }, [hydrate, hydrateNotifs, hydrateOrders, hydrateWallet]);
 
   const tierPct = Math.min(
     100,
@@ -145,22 +150,22 @@ export function DesktopAccount() {
                 <StatTile
                   Icon={Wallet}
                   label="Wallet Balance"
-                  value={formatNaira(useWallet.getState().balance)}
-                  hint={`${useWallet.getState().txns.length} transactions`}
+                  value={formatNaira(walletBalance)}
+                  hint={`${walletTxCount} transactions`}
                   to="/account/wallet"
                 />
                 <StatTile
                   Icon={Package}
                   label="Active Orders"
-                  value="2"
-                  hint="1 in transit"
+                  value={String(stats.activeOrders)}
+                  hint={stats.activeOrdersHint}
                   to="/account/orders"
                 />
                 <StatTile
                   Icon={Heart}
                   label="Wishlist"
-                  value="4"
-                  hint="Items saved"
+                  value={String(stats.wishlistCount)}
+                  hint={stats.wishlistCount === 1 ? "Item saved" : "Items saved"}
                   to="/account/wishlist"
                 />
               </motion.div>
@@ -322,12 +327,12 @@ export function DesktopAccount() {
             <h2 className="font-display font-bold text-[15px] tracking-wide mb-4">QUICK ACTIONS</h2>
             <div className="grid grid-cols-4 gap-3">
               <QuickAction Icon={Package} label="Orders" to="/account/orders" />
-              <QuickAction Icon={Heart} label="Wishlist" to="/account/wishlist" badge="4" />
+              <QuickAction Icon={Heart} label="Wishlist" to="/account/wishlist" badge={String(stats.wishlistCount)} />
               <QuickAction Icon={MapPin} label="Addresses" to="/account/addresses" />
               <QuickAction Icon={RefreshCw} label="Returns" to="/account/returns" />
               <QuickAction Icon={Wallet} label="Wallet" to="/account/wallet" />
               <QuickAction Icon={Gift} label="Rewards" to="/account/rewards" />
-              <QuickAction Icon={Bell} label="Notifications" to="/account/notifications" badge={String(unread.length)} />
+              <QuickAction Icon={Bell} label="Notifications" to="/account/notifications" badge={String(stats.unreadCount)} />
               <QuickAction Icon={Headphones} label="Help" to="/account/help" />
             </div>
           </motion.div>
@@ -343,9 +348,9 @@ export function DesktopAccount() {
               <div className="text-[10px] font-bold uppercase tracking-[0.3em] text-gold">Member Appreciation</div>
               <h2 className="font-display text-2xl font-bold mt-2 leading-tight">Thank you for being part of <span className="text-gold">ASL ORIGINALS</span></h2>
               <p className="text-sm text-white/70 mt-2">You're not just a customer, you're family. We're here to give you the best experience.</p>
-              <button onClick={() => toast("Shop New Arrivals")} className="mt-4 bg-gold text-white text-[12px] font-semibold px-5 py-2.5 rounded-full flex items-center gap-1.5 hover:bg-gold/90 transition-colors">
+              <Link to="/new-arrivals" className="mt-4 bg-gold text-white text-[12px] font-semibold px-5 py-2.5 rounded-full inline-flex items-center gap-1.5 hover:bg-gold/90 transition-colors">
                 Shop New Arrivals <ChevronRight className="h-3.5 w-3.5" />
-              </button>
+              </Link>
             </div>
             <div className="absolute right-0 top-0 h-full w-[45%]">
               <div className="absolute inset-0 bg-gradient-to-r from-ink via-ink/60 to-transparent z-10" />

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { ChevronRight, FileText, Info, RotateCcw } from "lucide-react";
 import { MobileShell } from "@/components/shell/MobileShell";
 import { useReturns, returnStatusStyle, ReturnStatus } from "./returnsData";
@@ -15,6 +15,7 @@ const tabs: { id: "all" | ReturnStatus; label: string }[] = [
 ];
 
 export function MobileReturns() {
+  const nav = useNavigate();
   const returnRequests = useReturns((s) => s.returnRequests);
   const hydrate = useReturns((s) => s.hydrate);
   useEffect(() => {
@@ -109,7 +110,7 @@ export function MobileReturns() {
 
           <motion.div variants={staggerContainer} initial="hidden" animate="visible" className="mt-3 space-y-3">
             {filtered.map((r) => (
-              <motion.button key={r.id} variants={staggerItem} className="w-full flex items-start gap-3 rounded-xl border border-border bg-card p-3 text-left">
+              <motion.button key={r.id} variants={staggerItem} onClick={() => nav({ to: "/account/returns/$id", params: { id: r.id } })} className="w-full flex items-start gap-3 rounded-xl border border-border bg-card p-3 text-left">
                 <div className="h-16 w-16 rounded-lg bg-muted overflow-hidden shrink-0">
                   <img src={r.image} alt={r.name} className="h-full w-full object-cover" />
                 </div>

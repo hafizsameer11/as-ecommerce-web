@@ -38,6 +38,7 @@ export const useStoreFaqs = create<State>()((set) => ({
       );
       set({
         items: items.map((it) => ({
+          id: it.id,
           q: it.question,
           a: it.answer,
           category: mapCategorySlug(catById.get(it.categoryId || "") || it.categoryId),

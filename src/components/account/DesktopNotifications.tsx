@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Link } from "@tanstack/react-router";
 import { CheckCheck, Settings, ArrowRight } from "lucide-react";
-import { toast } from "sonner";
 import { DesktopShell } from "@/components/shell/DesktopShell";
 import { AccountSidebar } from "./AccountSidebar";
 import { useNotifications, notifCategories, type NotifCategory } from "./notificationsData";
@@ -59,8 +58,6 @@ export function DesktopNotifications() {
           {/* List */}
           <motion.div variants={fadeInUp} initial="hidden" animate="visible" className="divide-y divide-border">
             {list.map((n) => {
-              const Wrapper: any = n.ctaTo ? Link : "button";
-              const wrapperProps: any = n.ctaTo ? { to: n.ctaTo } : { onClick: () => toast(n.cta) };
               return (
                 <div key={n.id} onClick={() => n.unread && void markRead(n.id)} className="py-5 flex items-start gap-4">
                   <div className="h-12 w-12 rounded-full bg-muted grid place-items-center shrink-0">
@@ -72,9 +69,11 @@ export function DesktopNotifications() {
                       <div className="font-semibold text-[14px]">{n.title}</div>
                     </div>
                     <div className="text-[13px] text-foreground/70 mt-1">{n.message}</div>
-                    <Wrapper {...wrapperProps} className="mt-2 inline-flex items-center gap-1 text-[12px] font-semibold text-ink hover:text-gold transition-colors">
-                      {n.cta} <ArrowRight className="h-3.5 w-3.5" />
-                    </Wrapper>
+                    {n.ctaTo && (
+                      <Link to={n.ctaTo as any} className="mt-2 inline-flex items-center gap-1 text-[12px] font-semibold text-ink hover:text-gold transition-colors">
+                        {n.cta} <ArrowRight className="h-3.5 w-3.5" />
+                      </Link>
+                    )}
                   </div>
                   <div className="text-right shrink-0">
                     <div className="text-[11px] text-muted-foreground">{n.time}</div>

@@ -17,6 +17,8 @@ import {
 } from "lucide-react";
 import { AccountInnerScaffold } from "@/components/account/AccountInnerScaffold";
 import { useTickets, type TicketCategory } from "@/lib/tickets-store";
+import { usePublicSettings } from "@/lib/api/settings";
+import { storeProfileContact } from "@/lib/public-settings-format";
 
 export const Route = createFileRoute("/account/help/contact")({
   head: () => ({ meta: [{ title: "Contact Support - ASL ORIGINALS" }, { name: "description", content: "Reach the ASL ORIGINALS support team." }] }),
@@ -32,14 +34,19 @@ const topics: { label: string; category: TicketCategory; Icon: LucideIcon }[] = 
   { label: "Other", category: "other", Icon: HelpCircle },
 ];
 
-const channels = [
-  { id: "whatsapp", label: "WhatsApp", value: "Chat now · ~10 min reply", Icon: MessageCircle, action: () => toast("Opening WhatsApp…") },
-  { id: "call", label: "Phone", value: "+234 800 ASL LUXE", Icon: Phone, action: () => toast("Calling…") },
-  { id: "email", label: "Email", value: "customerservice@asloriginals.com", Icon: Mail, action: () => toast("Opening mail…") },
-];
+function useChannels() {
+  const { data: publicSettings } = usePublicSettings();
+  const contact = storeProfileContact(publicSettings);
+  return [
+    { id: "whatsapp", label: "WhatsApp", value: "Chat now · ~10 min reply", Icon: MessageCircle, action: () => window.open(contact.whatsappUrl, "_blank", "noopener,noreferrer") },
+    { id: "call", label: "Phone", value: contact.supportPhone, Icon: Phone, action: () => { window.location.href = contact.telUrl; } },
+    { id: "email", label: "Email", value: contact.supportEmail, Icon: Mail, action: () => { window.location.href = contact.mailtoUrl; } },
+  ];
+}
 
 function Contact() {
   const nav = useNavigate();
+  const channels = useChannels();
   const createFromCustomer = useTickets((s) => s.createFromCustomer);
   const [topic, setTopic] = useState<string>("");
   const [message, setMessage] = useState("");

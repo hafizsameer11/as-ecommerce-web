@@ -11,6 +11,7 @@ export const PUBLIC_SETTINGS_DEFAULTS = {
     supportPhone: "+234 810 123 4567",
     supportEmail: "support@asloriginals.com",
     whatsapp: "2348101234567",
+    address: "Lekki Phase 1, Lagos, Nigeria",
   },
   deliveryRates: [
     { region: "Lagos", fee: 400_000, eta: "2 - 5 working days" },
@@ -28,6 +29,8 @@ export type StoreProfileContact = {
   whatsappUrl: string;
   telUrl: string;
   mailtoUrl: string;
+  address: string;
+  mapsUrl: string;
 };
 
 function section<T extends Record<string, unknown>>(settings: PublicSettings | null | undefined, key: string): T | undefined {
@@ -103,6 +106,7 @@ export function storeProfileContact(settings: PublicSettings | null | undefined)
   const supportPhone = p.supportPhone ?? PUBLIC_SETTINGS_DEFAULTS.profile.supportPhone;
   const supportEmail = p.supportEmail ?? PUBLIC_SETTINGS_DEFAULTS.profile.supportEmail;
   const whatsapp = p.whatsapp ?? PUBLIC_SETTINGS_DEFAULTS.profile.whatsapp;
+  const address = p.address ?? PUBLIC_SETTINGS_DEFAULTS.profile.address;
   const waDigits = whatsapp.replace(/\D/g, "");
   const telDigits = supportPhone.replace(/\D/g, "");
   return {
@@ -112,6 +116,8 @@ export function storeProfileContact(settings: PublicSettings | null | undefined)
     whatsappUrl: `https://wa.me/${waDigits}`,
     telUrl: telDigits ? `tel:+${telDigits}` : `tel:${supportPhone}`,
     mailtoUrl: `mailto:${supportEmail}`,
+    address,
+    mapsUrl: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`,
   };
 }
 

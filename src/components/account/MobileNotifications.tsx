@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, Settings, ArrowRight } from "lucide-react";
-import { toast } from "sonner";
 import { MobileShell } from "@/components/shell/MobileShell";
 import { useNotifications, notifCategories, type NotifCategory } from "./notificationsData";
 import { fadeInUp } from "@/lib/motion";
@@ -45,8 +44,6 @@ export function MobileNotifications() {
 
       <div className="px-3 py-4 space-y-3">
         {list.map((n) => {
-          const Wrapper: any = n.ctaTo ? Link : "button";
-          const wrapperProps: any = n.ctaTo ? { to: n.ctaTo } : { onClick: () => toast(n.cta) };
           return (
             <motion.div
               key={n.id}
@@ -65,9 +62,11 @@ export function MobileNotifications() {
                   <div className="font-semibold text-[13px]">{n.title}</div>
                 </div>
                 <div className="text-[12px] text-foreground/70 mt-1 leading-snug">{n.message}</div>
-                <Wrapper {...wrapperProps} className="mt-2 inline-flex items-center gap-1 text-[11px] font-semibold text-ink">
-                  {n.cta} <ArrowRight className="h-3 w-3" />
-                </Wrapper>
+                {n.ctaTo && (
+                  <Link to={n.ctaTo as any} className="mt-2 inline-flex items-center gap-1 text-[11px] font-semibold text-ink">
+                    {n.cta} <ArrowRight className="h-3 w-3" />
+                  </Link>
+                )}
               </div>
               <div className="text-right shrink-0">
                 <div className="text-[10px] text-muted-foreground">{n.time}</div>

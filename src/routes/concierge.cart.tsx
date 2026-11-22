@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useState } from "react";
 import { Trash2, Minus, Plus, ShieldCheck, HelpCircle, Info, ArrowLeft, ShoppingBag, RefreshCw, BadgeCheck, Truck, User } from "lucide-react";
 import { StrokeRosetteCheckIcon } from "@/components/home/TrustIcons";
 import { toast, Toaster } from "sonner";
@@ -7,6 +8,7 @@ import {
   conciergeStatusStyle, naira,
 } from "@/components/concierge-checkout/conciergeCheckoutData";
 import { useConciergeCheckoutState } from "@/components/concierge-checkout/useConciergeCheckout";
+import { loyaltyApi } from "@/lib/api/loyalty";
 
 export const Route = createFileRoute("/concierge/cart")({
   head: () => ({ meta: [{ title: "Concierge Cart - ASL ORIGINALS" }] }),
@@ -29,7 +31,36 @@ const footerBadges = [
 
 function ConciergeCartPage() {
   const nav = useNavigate();
-  const { items: conciergeItems, summary } = useConciergeCheckoutState();
+  const { items: conciergeItems, summary, reload } = useConciergeCheckoutState();
+  const [busyId, setBusyId] = useState<string | "all" | null>(null);
+
+  /** Removing a cart line cancels the underlying concierge request (only allowed before payment). */
+  const removeItem = async (id: string, name: string) => {
+    if (busyId) return;
+    if (!window.confirm(`Remove ${name} from your cart? This cancels the request.`)) return;
+    setBusyId(id);
+    try {
+      await loyaltyApi.cancelConciergeRequest(id);
+      toast.success("Request removed");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not remove this item");
+    } finally {
+      await reload();
+      setBusyId(null);
+    }
+  };
+
+  const clearCart = async () => {
+    if (busyId || conciergeItems.length === 0) return;
+    if (!window.confirm("Clear your concierge cart? This cancels all unpaid requests.")) return;
+    setBusyId("all");
+    const results = await Promise.allSettled(conciergeItems.map((i) => loyaltyApi.cancelConciergeRequest(i.id)));
+    const failed = results.filter((r) => r.status === "rejected").length;
+    if (failed === 0) toast.success("Cart cleared");
+    else toast.error(`Could not remove ${failed} item${failed > 1 ? "s" : ""} (already paid or in progress)`);
+    await reload();
+    setBusyId(null);
+  };
   const CONCIERGE_SERVICE_FEE = summary.serviceFee;
   const CONCIERGE_SHIPPING_EST = summary.shippingEstimate;
   const conciergeSubtotal = () => summary.subtotal;
@@ -97,7 +128,7 @@ function ConciergeCartPage() {
                   <div className="md:hidden ml-auto text-[13px] font-semibold">{naira(i.price)}</div>
                 </div>
                 <div className="hidden md:block text-right text-[13px] font-semibold">{naira(i.price * i.qty)}</div>
-                <button onClick={() => toast("Removed")} className="hidden md:block text-muted-foreground hover:text-red-600">
+                <button onClick={() => void removeItem(i.id, i.name)} disabled={busyId !== null} aria-label={`Remove ${i.name}`} className="hidden md:block text-muted-foreground hover:text-red-600 disabled:opacity-40">
                   <Trash2 className="h-4 w-4" />
                 </button>
               </div>
@@ -108,7 +139,7 @@ function ConciergeCartPage() {
             <Link to="/concierge-categories" className="inline-flex items-center gap-2 border border-border rounded-md px-4 py-2.5 text-[13px] font-semibold hover:bg-muted">
               <ArrowLeft className="h-4 w-4" /> Continue Shopping
             </Link>
-            <button onClick={() => toast("Cart cleared")} className="inline-flex items-center gap-2 border border-border rounded-md px-4 py-2.5 text-[13px] font-semibold hover:bg-muted">
+            <button onClick={() => void clearCart()} disabled={busyId !== null || conciergeItems.length === 0} className="inline-flex items-center gap-2 border border-border rounded-md px-4 py-2.5 text-[13px] font-semibold hover:bg-muted disabled:opacity-50">
               <Trash2 className="h-4 w-4" /> Clear Cart
             </button>
           </div>

@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { goToLabel } from "@/lib/nav-resolve";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link, useNavigate, useLocation, useRouter } from "@tanstack/react-router";
@@ -18,6 +18,7 @@ import { useCartCount } from "@/lib/cart-store";
 import { useWishlistCount } from "@/lib/wishlist";
 import { useAccountDisplayName, useAuth } from "@/lib/auth-store";
 import { useClubRewards } from "@/components/account/rewardsData";
+import { useNotifications } from "@/components/account/notificationsData";
 import { subCategories } from "@/lib/shop-data";
 import wordmarkBlack from "@/assets/ASL_wordmark_black.png";
 import wordmarkWhite from "@/assets/ASL_wordmark_white.png";
@@ -152,6 +153,14 @@ export function MobileShell({
   const wishCountLive = useWishlistCount();
   const accountDisplayName = useAccountDisplayName();
   const clubTier = useClubRewards((s) => s.summary.tier);
+  const isLoggedInShell = useAuth((s) => s.isLoggedIn);
+  const unreadNotifs = useNotifications((s) => s.unreadCount);
+  const notifsHydrated = useNotifications((s) => s.hydrated);
+  const hydrateNotifs = useNotifications((s) => s.hydrate);
+  useEffect(() => {
+    if (isLoggedInShell && !notifsHydrated) void hydrateNotifs();
+  }, [isLoggedInShell, notifsHydrated, hydrateNotifs]);
+  const openNotifications = () => navigate({ to: "/account/notifications" });
 
   const cartBadge = cartCountLive > 0 ? cartCountLive : showCartBadge;
 
@@ -237,11 +246,13 @@ export function MobileShell({
               <img src={wordmarkBlack} alt="ASL ORIGINALS" className="h-[14px] w-auto object-contain" />
             </div>
             <div className="flex items-center justify-end gap-4 text-foreground">
-              <motion.button whileTap="tap" variants={buttonTap} onClick={() => toast("No new notifications")} aria-label="Notifications" className="relative">
+              <motion.button whileTap="tap" variants={buttonTap} onClick={openNotifications} aria-label="Notifications" className="relative">
                 <Bell className="h-6 w-6" strokeWidth={1.75} />
-                <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-sale text-white text-[9px] font-bold grid place-items-center">
-                  0
-                </span>
+                {unreadNotifs > 0 && (
+                  <span className="absolute -top-1 -right-1 min-w-4 h-4 px-1 rounded-full bg-sale text-white text-[9px] font-bold grid place-items-center">
+                    {unreadNotifs > 99 ? "99+" : unreadNotifs}
+                  </span>
+                )}
               </motion.button>
               <motion.button whileTap="tap" variants={buttonTap} onClick={() => goToLabel("Settings")} aria-label="Settings">
                 <Settings className="h-6 w-6" strokeWidth={1.75} />
@@ -259,11 +270,13 @@ export function MobileShell({
               {title}
             </div>
             <div className="flex items-center justify-end text-foreground">
-              <motion.button whileTap="tap" variants={buttonTap} onClick={() => toast("No new notifications")} aria-label="Notifications" className="relative">
+              <motion.button whileTap="tap" variants={buttonTap} onClick={openNotifications} aria-label="Notifications" className="relative">
                 <Bell className="h-6 w-6" strokeWidth={1.75} />
-                <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-sale text-white text-[9px] font-bold grid place-items-center">
-                  0
-                </span>
+                {unreadNotifs > 0 && (
+                  <span className="absolute -top-1 -right-1 min-w-4 h-4 px-1 rounded-full bg-sale text-white text-[9px] font-bold grid place-items-center">
+                    {unreadNotifs > 99 ? "99+" : unreadNotifs}
+                  </span>
+                )}
               </motion.button>
             </div>
           </div>

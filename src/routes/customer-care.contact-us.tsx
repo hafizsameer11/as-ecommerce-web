@@ -5,6 +5,8 @@ import { toast } from "sonner";
 import { Mail, Phone, MessageCircle, MapPin, ArrowUpRight, ArrowRight, Check } from "lucide-react";
 import { CustomerCareScaffold } from "@/components/customer-care/CustomerCareScaffold";
 import { useTickets, type TicketCategory } from "@/lib/tickets-store";
+import { usePublicSettings } from "@/lib/api/settings";
+import { storeProfileContact } from "@/lib/public-settings-format";
 
 export const Route = createFileRoute("/customer-care/contact-us")({
   head: () => ({
@@ -20,40 +22,44 @@ export const Route = createFileRoute("/customer-care/contact-us")({
   component: ContactUs,
 });
 
-const channels = [
-  {
-    Icon: MessageCircle,
-    index: "01",
-    label: "WhatsApp",
-    value: "+234 800 ASL LUXE",
-    note: "Fastest reply · ~10 mins",
-    action: () => toast("Opening WhatsApp…"),
-  },
-  {
-    Icon: Phone,
-    index: "02",
-    label: "Call Us",
-    value: "+234 800 275 5893",
-    note: "Mon - Sun, 9AM - 8PM WAT",
-    action: () => toast("Calling…"),
-  },
-  {
-    Icon: Mail,
-    index: "03",
-    label: "Email",
-    value: "customerservice@asloriginals.com",
-    note: "Reply within 24 hours",
-    action: () => toast("Opening mail…"),
-  },
-  {
-    Icon: MapPin,
-    index: "04",
-    label: "Visit the Atelier",
-    value: "Lekki Phase 1, Lagos",
-    note: "By appointment only",
-    action: () => toast("Opening map…"),
-  },
-];
+function useChannels() {
+  const { data: publicSettings } = usePublicSettings();
+  const contact = storeProfileContact(publicSettings);
+  return [
+    {
+      Icon: MessageCircle,
+      index: "01",
+      label: "WhatsApp",
+      value: contact.supportPhone,
+      note: "Fastest reply · ~10 mins",
+      action: () => window.open(contact.whatsappUrl, "_blank", "noopener,noreferrer"),
+    },
+    {
+      Icon: Phone,
+      index: "02",
+      label: "Call Us",
+      value: contact.supportPhone,
+      note: "Mon - Sun, 9AM - 8PM WAT",
+      action: () => { window.location.href = contact.telUrl; },
+    },
+    {
+      Icon: Mail,
+      index: "03",
+      label: "Email",
+      value: contact.supportEmail,
+      note: "Reply within 24 hours",
+      action: () => { window.location.href = contact.mailtoUrl; },
+    },
+    {
+      Icon: MapPin,
+      index: "04",
+      label: "Visit the Atelier",
+      value: contact.address,
+      note: "By appointment only",
+      action: () => window.open(contact.mapsUrl, "_blank", "noopener,noreferrer"),
+    },
+  ];
+}
 
 const subjectToCategory: Record<string, TicketCategory> = {
   "Order Issue": "order",
@@ -68,6 +74,7 @@ const fieldCls =
 
 function ContactUs() {
   const nav = useNavigate();
+  const channels = useChannels();
   const contact = useTickets((s) => s.contact);
   const [form, setForm] = useState({ name: "", email: "", subject: "", message: "" });
   const [doneId, setDoneId] = useState<string | null>(null);

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Toaster, toast } from "sonner";
 import { AccountInnerScaffold } from "@/components/account/AccountInnerScaffold";
 import { useWallet } from "@/lib/wallet-store";
@@ -112,7 +112,11 @@ function Withdraw() {
               <p className="mt-1.5 text-[13px] text-muted-foreground py-3">Loading accounts…</p>
             ) : accounts.length === 0 ? (
               <p className="mt-1.5 text-[13px] text-muted-foreground py-3">
-                No saved bank accounts yet. Add one from wallet settings, then try again.
+                No saved bank accounts yet.{" "}
+                <Link to="/account/wallet/bank-accounts" className="font-semibold text-gold hover:underline">
+                  Add a bank account
+                </Link>{" "}
+                to withdraw.
               </p>
             ) : (
               <select
@@ -128,6 +132,11 @@ function Withdraw() {
               </select>
             )}
           </div>
+          {accounts.length > 0 && (
+            <Link to="/account/wallet/bank-accounts" className="block text-[12px] font-semibold text-gold hover:underline">
+              Manage bank accounts
+            </Link>
+          )}
           <div className="text-[11px] text-muted-foreground bg-muted/40 rounded-md p-3">
             Withdrawals process within 1 - 3 business days.
           </div>

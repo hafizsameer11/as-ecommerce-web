@@ -2,7 +2,6 @@ import { useEffect } from "react";
 import { Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import { ChevronRight, CreditCard } from "lucide-react";
-import { toast } from "sonner";
 import { MobileShell } from "@/components/shell/MobileShell";
 import { quickActions } from "./walletData";
 import { useWallet } from "@/lib/wallet-store";
@@ -57,8 +56,8 @@ export function MobileWallet() {
           <h2 className="font-display text-[15px] font-bold">Quick Actions</h2>
           <div className="mt-3 grid grid-cols-4 gap-2">
             {quickActions.map((a) => {
-              const Cmp: any = a.to ? Link : "button";
-              const props: any = a.to ? { to: a.to } : { onClick: () => toast(a.label) };
+              const Cmp: any = Link;
+              const props: any = { to: a.to };
               return (
                 <Cmp key={a.id} {...props} className="flex flex-col items-center gap-1.5 text-center">
                   <div className="h-11 w-11 rounded-full bg-muted grid place-items-center">

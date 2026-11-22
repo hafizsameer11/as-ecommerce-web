@@ -4,6 +4,7 @@ import { goToLabel } from "@/lib/nav-resolve";
 import { motion } from "framer-motion";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
+import { openCourierTracking } from "@/lib/courier-tracking";
 import { Menu, ShoppingBag, Home, Grid3x3, Plus, MapPin, User, ChevronDown, ChevronRight, Copy, ArrowRight } from "lucide-react";
 import { fadeInUp, buttonTap } from "@/lib/motion";
 import { trackSteps, helpOptions, statusToStepIndex } from "./trackData";
@@ -66,6 +67,7 @@ export function MobileTrackRequest({ id, email: emailParam }: { id?: string; ema
     status: notFound ? "NOT FOUND" : "—",
     tracking: "",
     courier: "",
+    trackingUrl: null as string | null,
     estimated: notFound ? "We couldn't find that request." : "Track a request to see live status.",
     image: productImg,
     trackStep: 0,
@@ -244,10 +246,12 @@ export function MobileTrackRequest({ id, email: emailParam }: { id?: string; ema
             <span className="text-muted-foreground">Courier</span>
             <span className="font-semibold text-ink">{display.courier}</span>
           </div>
-          <motion.button whileTap="tap" variants={buttonTap} onClick={() => toast("Opening DHL…")}
-            className="w-full border border-ink text-ink py-3 text-[11px] font-semibold tracking-[0.22em] rounded">
-          TRACK ON DHL
-          </motion.button>
+          {display.trackingUrl && (
+            <motion.button whileTap="tap" variants={buttonTap} onClick={() => openCourierTracking(display.trackingUrl!)}
+              className="w-full border border-ink text-ink py-3 text-[11px] font-semibold tracking-[0.22em] rounded uppercase">
+              Track on {display.courier || "courier"}
+            </motion.button>
+          )}
         </div>
       </section>
 

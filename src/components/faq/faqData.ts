@@ -11,6 +11,8 @@ export const faqCategories = [
 ];
 
 export type FaqItem = {
+  /** Server FAQ id (absent for the static fallback list) */
+  id?: string;
   q: string;
   a: string;
   category: string;

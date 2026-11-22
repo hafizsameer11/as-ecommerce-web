@@ -196,8 +196,7 @@ export function SignInForm({
           {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
         </button>
       </div>
-      <div className="flex items-center justify-between text-[12px]">
-        <label className="inline-flex items-center gap-2"><input type="checkbox" className="accent-ink" /> Remember me</label>
+      <div className="flex items-center justify-end text-[12px]">
         <button type="button" onClick={() => onSwitch("forgot", { email })} className="text-ink underline underline-offset-2">Forgot password?</button>
       </div>
       <PrimaryBtn type="submit">Sign in <ArrowRight className="h-4 w-4" /></PrimaryBtn>
@@ -229,11 +228,12 @@ export function SignUpForm({
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [agree, setAgree] = useState(false);
-  const valid = name.length >= 2 && /.+@.+\..+/.test(email) && password.length >= 6 && agree;
+  const valid = name.length >= 2 && /.+@.+\..+/.test(email) && password.length >= 8 && agree;
   return (
     <form
       onSubmit={(e) => {
         e.preventDefault();
+        if (password.length > 0 && password.length < 8) return toast.error("Password must be at least 8 characters");
         if (!valid) return toast.error("Complete all fields and agree to the terms");
         onSubmit({ name, email, phone, password });
       }}
@@ -247,7 +247,7 @@ export function SignUpForm({
       <Field icon={User} placeholder="Full name" value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" />
       <Field icon={Mail} type="email" placeholder="Email address" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" />
       <Field icon={Phone} placeholder="Phone (optional)" value={phone} onChange={(e) => setPhone(e.target.value)} autoComplete="tel" />
-      <Field icon={Lock} type="password" placeholder="Password (min 6 characters)" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="new-password" />
+      <Field icon={Lock} type="password" placeholder="Password (min 8 characters)" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="new-password" />
       <label className="flex items-start gap-2 text-[12px] text-muted-foreground">
         <input type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} className="mt-0.5 accent-ink" />
         <span>I agree to ASL's <Link to="/customer-care/terms-of-service" className="underline">Terms</Link> and <Link to="/customer-care/privacy-policy" className="underline">Privacy Policy</Link>.</span>

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Toaster, toast } from "sonner";
-import { CreditCard, Building2, Wallet as WalletIcon } from "lucide-react";
+import { CreditCard, Building2 } from "lucide-react";
 import { AccountInnerScaffold } from "@/components/account/AccountInnerScaffold";
 import { accountApi } from "@/lib/api/account";
 import { openPaymentAndVerify } from "@/lib/open-payment";
@@ -18,14 +18,14 @@ export const Route = createFileRoute("/account/payment-methods/new")({
 
 function AddPaymentMethod() {
   const nav = useNavigate();
-  const [type, setType] = useState<"card" | "bank" | "paypal">("card");
+  const [type, setType] = useState<"card" | "bank">("card");
   const [isDefault, setIsDefault] = useState(true);
   const [busy, setBusy] = useState(false);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (type !== "card") {
-      toast.error(type === "bank" ? "Add bank accounts from Wallet → Withdraw" : "PayPal is not available yet");
+      nav({ to: "/account/wallet/bank-accounts" });
       return;
     }
     if (busy) return;
@@ -65,8 +65,8 @@ function AddPaymentMethod() {
         backTo="/account/payment-methods"
       >
         <div className="rounded-2xl border border-border bg-white p-5 space-y-5">
-          <div className="grid grid-cols-3 gap-2">
-            {([{ v: "card" as const, l: "Card", I: CreditCard }, { v: "bank" as const, l: "Bank", I: Building2 }, { v: "paypal" as const, l: "PayPal", I: WalletIcon }]).map(
+          <div className="grid grid-cols-2 gap-2">
+            {([{ v: "card" as const, l: "Card", I: CreditCard }, { v: "bank" as const, l: "Bank account", I: Building2 }]).map(
               ({ v, l, I }) => (
                 <button
                   key={v}
@@ -93,9 +93,8 @@ function AddPaymentMethod() {
               </div>
             )}
             {type === "bank" && (
-              <p className="text-[12px] text-muted-foreground">Bank accounts for withdrawals are managed under Wallet → Withdraw.</p>
+              <p className="text-[12px] text-muted-foreground">Bank accounts are used to withdraw your wallet balance. Continue to add or manage them.</p>
             )}
-            {type === "paypal" && <p className="text-[12px] text-muted-foreground">PayPal is not available yet.</p>}
             <label className="flex items-center gap-2 text-[13px]">
               <input
                 type="checkbox"

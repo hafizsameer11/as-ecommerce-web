@@ -1,14 +1,20 @@
+import { useEffect } from "react";
 import { motion } from "framer-motion";
 import { ChevronRight, Crown, Star } from "lucide-react";
-import { toast } from "sonner";
 import { DesktopShell } from "@/components/shell/DesktopShell";
 import { useNavigate } from "@tanstack/react-router";
 import { AccountSidebar } from "./AccountSidebar";
 import { benefits, moreBenefits } from "./benefitsData";
+import { useClubRewards } from "./rewardsData";
 import { fadeInUp, staggerContainer, staggerItem } from "@/lib/motion";
 
 export function DesktopBenefits() {
   const nav = useNavigate();
+  const summary = useClubRewards((s) => s.summary);
+  const hydrate = useClubRewards((s) => s.hydrate);
+  useEffect(() => {
+    void hydrate();
+  }, [hydrate]);
   return (
     <DesktopShell active="Account">
       <div className="mx-auto max-w-[1600px] px-6 py-8 grid grid-cols-[260px_1fr] gap-8">
@@ -32,7 +38,7 @@ export function DesktopBenefits() {
                 <Crown className="h-7 w-7" strokeWidth={1.75} />
               </div>
               <div>
-                <div className="font-display text-xl font-bold text-gold">GOLD MEMBER</div>
+                <div className="font-display text-xl font-bold text-gold">{summary.tier} MEMBER</div>
                 <div className="text-[13px] text-muted-foreground">Thank you for being a valued member.</div>
               </div>
             </div>
@@ -45,7 +51,7 @@ export function DesktopBenefits() {
               </div>
               <div className="text-left">
                 <div className="font-display text-xl font-bold leading-none">
-                  2,450 <span className="text-[11px] font-semibold text-muted-foreground">pts</span>
+                  {summary.points.toLocaleString()} <span className="text-[11px] font-semibold text-muted-foreground">pts</span>
                 </div>
                 <div className="text-[11px] text-muted-foreground mt-1">Available Points</div>
               </div>
@@ -59,7 +65,7 @@ export function DesktopBenefits() {
               <motion.button
                 key={b.id}
                 variants={staggerItem}
-                onClick={() => toast(b.title, { description: b.desc })}
+                onClick={() => nav({ to: b.to })}
                 className="w-full grid grid-cols-[auto_1fr_auto] items-center gap-5 rounded-xl border border-border bg-card p-5 text-left hover:shadow-sm transition-shadow"
               >
                 <div className="h-12 w-12 rounded-full bg-muted grid place-items-center text-ink">

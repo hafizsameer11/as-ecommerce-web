@@ -263,6 +263,10 @@ export type ApiConciergeTrack = {
   statusKey?: string;
   statusNote?: string;
   trackStep?: number | null;
+  /** Present only once a courier shipment exists */
+  carrier?: string | null;
+  trackingNumber?: string | null;
+  trackingUrl?: string | null;
   createdAt: string;
   updatedAt?: string;
   timeline?: Array<{ id: string; kind: string; text: string; by?: string; at: string }>;

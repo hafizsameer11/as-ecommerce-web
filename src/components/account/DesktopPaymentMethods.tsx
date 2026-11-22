@@ -171,11 +171,7 @@ export function DesktopPaymentMethods() {
               {otherMethods.map((m) => (
                 <button
                   key={m.id}
-                  onClick={() =>
-                    m.id === "new-card"
-                      ? nav({ to: "/account/payment-methods/new" })
-                      : toast(m.label, { description: m.desc })
-                  }
+                  onClick={() => nav({ to: m.to })}
                   className="rounded-2xl bg-[#f5f5f5] border border-[#e5e5e5] p-5 flex items-center gap-4 text-left hover:bg-[#eeeeee] transition-colors"
                 >
                   <div className="h-11 w-11 rounded-full bg-white grid place-items-center shrink-0">

@@ -1,13 +1,21 @@
+import { useEffect } from "react";
 import { motion } from "framer-motion";
 import { ChevronRight, Star } from "lucide-react";
-import { toast } from "sonner";
 import { MobileShell } from "@/components/shell/MobileShell";
 import { useNavigate } from "@tanstack/react-router";
 import { benefits, moreBenefits } from "./benefitsData";
+import { useClubRewards } from "./rewardsData";
+import { useAccountDisplayName } from "@/lib/auth-store";
 import { staggerContainer, staggerItem } from "@/lib/motion";
 
 export function MobileBenefits() {
   const nav = useNavigate();
+  const summary = useClubRewards((s) => s.summary);
+  const hydrate = useClubRewards((s) => s.hydrate);
+  const displayName = useAccountDisplayName();
+  useEffect(() => {
+    void hydrate();
+  }, [hydrate]);
   return (
     <MobileShell activeBottom="account" headerVariant="shop" showTopTabs={false} title="Membership Benefits">
       <div className="px-3 pt-4 pb-6 space-y-3">
@@ -20,9 +28,9 @@ export function MobileBenefits() {
             </div>
           </div>
           <div className="min-w-0">
-            <div className="font-semibold text-[14px]">Alex Johnson</div>
+            <div className="font-semibold text-[14px]">{displayName}</div>
             <span className="inline-block mt-1 text-[10px] font-semibold text-gold bg-gold/10 border border-gold/20 rounded px-1.5 py-0.5">
-              <Star className="inline h-3 w-3 fill-gold text-gold mr-1" /> Gold Member
+              <Star className="inline h-3 w-3 fill-gold text-gold mr-1" /> {summary.tier} Member
             </span>
           </div>
         </div>
@@ -37,7 +45,7 @@ export function MobileBenefits() {
           </div>
           <div className="flex-1">
             <div className="font-display text-lg font-bold leading-none">
-              2,450 <span className="text-[10px] font-semibold text-muted-foreground">pts</span>
+              {summary.points.toLocaleString()} <span className="text-[10px] font-semibold text-muted-foreground">pts</span>
             </div>
             <div className="text-[11px] text-muted-foreground mt-1">Available Points</div>
           </div>
@@ -51,7 +59,7 @@ export function MobileBenefits() {
               key={b.id}
               variants={staggerItem}
               whileTap={{ scale: 0.99 }}
-              onClick={() => toast(b.title, { description: b.desc })}
+              onClick={() => nav({ to: b.to })}
               className="w-full flex items-center gap-3 rounded-xl border border-border bg-card p-3.5 text-left"
             >
               <div className="h-10 w-10 rounded-full bg-muted grid place-items-center text-ink shrink-0">

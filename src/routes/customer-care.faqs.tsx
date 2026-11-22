@@ -3,6 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Plus, Minus, ShieldCheck } from "lucide-react";
 import { CustomerCareScaffold } from "@/components/customer-care/CustomerCareScaffold";
 import { useStoreFaqs } from "@/lib/faq-store";
+import { FaqHelpful } from "@/components/faq/FaqHelpful";
 
 export const Route = createFileRoute("/customer-care/faqs")({
   head: () => ({
@@ -44,7 +45,10 @@ function FAQsPage() {
                 {isOpen ? <Minus className="h-4 w-4 text-ink" /> : <Plus className="h-4 w-4 text-ink" />}
               </button>
               {isOpen && (
-                <div className="px-4 pb-4 pl-10 text-[12.5px] text-foreground/75 leading-relaxed">{item.a}</div>
+                <div className="px-4 pb-4 pl-10 text-[12.5px] text-foreground/75 leading-relaxed">
+                  {item.a}
+                  <FaqHelpful id={item.id} />
+                </div>
               )}
             </div>
           );

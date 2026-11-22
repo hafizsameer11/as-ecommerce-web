@@ -121,9 +121,13 @@ export function DesktopReturns() {
                     <span className={`inline-block mt-1 text-[10px] font-semibold px-2 py-0.5 rounded ${returnStatusStyle[r.status]}`}>{r.status}</span>
                     <div className="text-[11px] text-muted-foreground mt-1 max-w-[220px]">{r.statusNote}</div>
                   </div>
-                  <button className="px-4 py-2 rounded-md border border-border text-[12px] font-semibold flex items-center gap-1 whitespace-nowrap">
+                  <Link
+                    to="/account/returns/$id"
+                    params={{ id: r.id }}
+                    className="px-4 py-2 rounded-md border border-border text-[12px] font-semibold flex items-center gap-1 whitespace-nowrap hover:bg-muted/50"
+                  >
                     View Details <ChevronRight className="h-3 w-3" />
-                  </button>
+                  </Link>
                 </motion.div>
               ))}
             </div>

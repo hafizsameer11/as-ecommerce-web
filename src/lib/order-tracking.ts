@@ -1,3 +1,4 @@
+import { courierTrackingUrl } from "@/lib/courier-tracking";
 import { accountApi, type ApiOrderDetail, type ApiOrderTracking } from "@/lib/api/account";
 
 export type TrackView = {
@@ -7,6 +8,8 @@ export type TrackView = {
   eta?: string | null;
   trackingNumber?: string | null;
   carrier?: string | null;
+  /** Real courier tracking page, when the carrier has one */
+  trackingUrl?: string | null;
   delivery: string;
   timeline: Array<{ title: string; detail?: string | null; at: string; done: boolean }>;
   shipmentEvents: Array<{ title: string; detail?: string | null; at: string }>;
@@ -64,6 +67,7 @@ export function mapTracking(tracking: ApiOrderTracking, order?: ApiOrderDetail |
     eta: tracking.eta ?? live?.etaAt ?? null,
     trackingNumber,
     carrier,
+    trackingUrl: courierTrackingUrl(live?.carrier || live?.carrierLabel, trackingNumber, live?.trackingUrl),
     delivery: tracking.delivery,
     timeline,
     shipmentEvents,

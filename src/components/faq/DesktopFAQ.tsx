@@ -14,6 +14,7 @@ const WhatsAppIcon = ({ className }: { className?: string; strokeWidth?: number 
   </svg>
 );
 import { faqTrust } from "./faqData";
+import { FaqHelpful } from "./FaqHelpful";
 import helpImg from "@/assets/faq-help.jpg";
 
 const nav = [
@@ -127,7 +128,7 @@ export function DesktopFAQ() {
                   <AnimatePresence initial={false}>
                     {isOpen && (
                       <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }} className="overflow-hidden">
-                        <div className="px-5 pb-4 pl-12 text-[12.5px] text-muted-foreground leading-relaxed">{item.a}</div>
+                        <div className="px-5 pb-4 pl-12 text-[12.5px] text-muted-foreground leading-relaxed">{item.a}<FaqHelpful id={item.id} /></div>
                       </motion.div>
                     )}
                   </AnimatePresence>

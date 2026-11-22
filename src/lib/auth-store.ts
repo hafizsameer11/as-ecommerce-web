@@ -89,7 +89,9 @@ async function afterAuthMerge() {
         import("@/lib/orders-store"),
         import("@/lib/wallet-store"),
       ]);
+    const { flushPendingNewsletter } = await import("@/lib/newsletter");
     await Promise.all([
+      flushPendingNewsletter(),
       useCart.getState().mergeGuestCart(),
       useWishlist.getState().mergeLocal(),
       useMyCoupons.getState().refresh(),

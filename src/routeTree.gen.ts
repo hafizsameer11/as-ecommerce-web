@@ -93,6 +93,7 @@ import { Route as AccountPaymentMethodsIndexRouteImport } from './routes/account
 import { Route as AccountPaymentMethodsNewRouteImport } from './routes/account.payment-methods.new'
 import { Route as AccountRequestsIdRouteImport } from './routes/account.requests.$id'
 import { Route as AccountReturnsIndexRouteImport } from './routes/account.returns.index'
+import { Route as AccountReturnsIdRouteImport } from './routes/account.returns.$id'
 import { Route as AccountReturnsDetailsRouteImport } from './routes/account.returns.details'
 import { Route as AccountReturnsHowItWorksRouteImport } from './routes/account.returns.how-it-works'
 import { Route as AccountReturnsPolicyRouteImport } from './routes/account.returns.policy'
@@ -102,6 +103,7 @@ import { Route as AccountRewardsRedeemRouteImport } from './routes/account.rewar
 import { Route as AccountTicketsIndexRouteImport } from './routes/account.tickets.index'
 import { Route as AccountTicketsIdRouteImport } from './routes/account.tickets.$id'
 import { Route as AccountWalletIndexRouteImport } from './routes/account.wallet.index'
+import { Route as AccountWalletBankAccountsRouteImport } from './routes/account.wallet.bank-accounts'
 import { Route as AccountWalletTopupRouteImport } from './routes/account.wallet.topup'
 import { Route as AccountWalletWithdrawRouteImport } from './routes/account.wallet.withdraw'
 
@@ -536,6 +538,11 @@ const AccountReturnsIndexRoute = AccountReturnsIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AccountReturnsRoute,
 } as any)
+const AccountReturnsIdRoute = AccountReturnsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AccountReturnsRoute,
+} as any)
 const AccountReturnsDetailsRoute = AccountReturnsDetailsRouteImport.update({
   id: '/details',
   path: '/details',
@@ -582,6 +589,12 @@ const AccountWalletIndexRoute = AccountWalletIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AccountWalletRoute,
 } as any)
+const AccountWalletBankAccountsRoute =
+  AccountWalletBankAccountsRouteImport.update({
+    id: '/bank-accounts',
+    path: '/bank-accounts',
+    getParentRoute: () => AccountWalletRoute,
+  } as any)
 const AccountWalletTopupRoute = AccountWalletTopupRouteImport.update({
   id: '/topup',
   path: '/topup',
@@ -672,12 +685,14 @@ export interface FileRoutesByFullPath {
   '/account/orders/$id': typeof AccountOrdersIdRoute
   '/account/payment-methods/new': typeof AccountPaymentMethodsNewRoute
   '/account/requests/$id': typeof AccountRequestsIdRoute
+  '/account/returns/$id': typeof AccountReturnsIdRoute
   '/account/returns/details': typeof AccountReturnsDetailsRoute
   '/account/returns/how-it-works': typeof AccountReturnsHowItWorksRoute
   '/account/returns/policy': typeof AccountReturnsPolicyRoute
   '/account/returns/start': typeof AccountReturnsStartRoute
   '/account/rewards/redeem': typeof AccountRewardsRedeemRoute
   '/account/tickets/$id': typeof AccountTicketsIdRoute
+  '/account/wallet/bank-accounts': typeof AccountWalletBankAccountsRoute
   '/account/wallet/topup': typeof AccountWalletTopupRoute
   '/account/wallet/withdraw': typeof AccountWalletWithdrawRoute
   '/account/addresses/': typeof AccountAddressesIndexRoute
@@ -758,12 +773,14 @@ export interface FileRoutesByTo {
   '/account/orders/$id': typeof AccountOrdersIdRoute
   '/account/payment-methods/new': typeof AccountPaymentMethodsNewRoute
   '/account/requests/$id': typeof AccountRequestsIdRoute
+  '/account/returns/$id': typeof AccountReturnsIdRoute
   '/account/returns/details': typeof AccountReturnsDetailsRoute
   '/account/returns/how-it-works': typeof AccountReturnsHowItWorksRoute
   '/account/returns/policy': typeof AccountReturnsPolicyRoute
   '/account/returns/start': typeof AccountReturnsStartRoute
   '/account/rewards/redeem': typeof AccountRewardsRedeemRoute
   '/account/tickets/$id': typeof AccountTicketsIdRoute
+  '/account/wallet/bank-accounts': typeof AccountWalletBankAccountsRoute
   '/account/wallet/topup': typeof AccountWalletTopupRoute
   '/account/wallet/withdraw': typeof AccountWalletWithdrawRoute
   '/account/addresses': typeof AccountAddressesIndexRoute
@@ -856,12 +873,14 @@ export interface FileRoutesById {
   '/account/orders/$id': typeof AccountOrdersIdRoute
   '/account/payment-methods/new': typeof AccountPaymentMethodsNewRoute
   '/account/requests/$id': typeof AccountRequestsIdRoute
+  '/account/returns/$id': typeof AccountReturnsIdRoute
   '/account/returns/details': typeof AccountReturnsDetailsRoute
   '/account/returns/how-it-works': typeof AccountReturnsHowItWorksRoute
   '/account/returns/policy': typeof AccountReturnsPolicyRoute
   '/account/returns/start': typeof AccountReturnsStartRoute
   '/account/rewards/redeem': typeof AccountRewardsRedeemRoute
   '/account/tickets/$id': typeof AccountTicketsIdRoute
+  '/account/wallet/bank-accounts': typeof AccountWalletBankAccountsRoute
   '/account/wallet/topup': typeof AccountWalletTopupRoute
   '/account/wallet/withdraw': typeof AccountWalletWithdrawRoute
   '/account/addresses/': typeof AccountAddressesIndexRoute
@@ -955,12 +974,14 @@ export interface FileRouteTypes {
     | '/account/orders/$id'
     | '/account/payment-methods/new'
     | '/account/requests/$id'
+    | '/account/returns/$id'
     | '/account/returns/details'
     | '/account/returns/how-it-works'
     | '/account/returns/policy'
     | '/account/returns/start'
     | '/account/rewards/redeem'
     | '/account/tickets/$id'
+    | '/account/wallet/bank-accounts'
     | '/account/wallet/topup'
     | '/account/wallet/withdraw'
     | '/account/addresses/'
@@ -1041,12 +1062,14 @@ export interface FileRouteTypes {
     | '/account/orders/$id'
     | '/account/payment-methods/new'
     | '/account/requests/$id'
+    | '/account/returns/$id'
     | '/account/returns/details'
     | '/account/returns/how-it-works'
     | '/account/returns/policy'
     | '/account/returns/start'
     | '/account/rewards/redeem'
     | '/account/tickets/$id'
+    | '/account/wallet/bank-accounts'
     | '/account/wallet/topup'
     | '/account/wallet/withdraw'
     | '/account/addresses'
@@ -1138,12 +1161,14 @@ export interface FileRouteTypes {
     | '/account/orders/$id'
     | '/account/payment-methods/new'
     | '/account/requests/$id'
+    | '/account/returns/$id'
     | '/account/returns/details'
     | '/account/returns/how-it-works'
     | '/account/returns/policy'
     | '/account/returns/start'
     | '/account/rewards/redeem'
     | '/account/tickets/$id'
+    | '/account/wallet/bank-accounts'
     | '/account/wallet/topup'
     | '/account/wallet/withdraw'
     | '/account/addresses/'
@@ -1780,6 +1805,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AccountReturnsIndexRouteImport
       parentRoute: typeof AccountReturnsRoute
     }
+    '/account/returns/$id': {
+      id: '/account/returns/$id'
+      path: '/$id'
+      fullPath: '/account/returns/$id'
+      preLoaderRoute: typeof AccountReturnsIdRouteImport
+      parentRoute: typeof AccountReturnsRoute
+    }
     '/account/returns/details': {
       id: '/account/returns/details'
       path: '/details'
@@ -1841,6 +1873,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/account/wallet/'
       preLoaderRoute: typeof AccountWalletIndexRouteImport
+      parentRoute: typeof AccountWalletRoute
+    }
+    '/account/wallet/bank-accounts': {
+      id: '/account/wallet/bank-accounts'
+      path: '/bank-accounts'
+      fullPath: '/account/wallet/bank-accounts'
+      preLoaderRoute: typeof AccountWalletBankAccountsRouteImport
       parentRoute: typeof AccountWalletRoute
     }
     '/account/wallet/topup': {
@@ -1944,6 +1983,7 @@ const AccountRequestsRouteWithChildren = AccountRequestsRoute._addFileChildren(
 )
 
 interface AccountReturnsRouteChildren {
+  AccountReturnsIdRoute: typeof AccountReturnsIdRoute
   AccountReturnsDetailsRoute: typeof AccountReturnsDetailsRoute
   AccountReturnsHowItWorksRoute: typeof AccountReturnsHowItWorksRoute
   AccountReturnsPolicyRoute: typeof AccountReturnsPolicyRoute
@@ -1952,6 +1992,7 @@ interface AccountReturnsRouteChildren {
 }
 
 const AccountReturnsRouteChildren: AccountReturnsRouteChildren = {
+  AccountReturnsIdRoute: AccountReturnsIdRoute,
   AccountReturnsDetailsRoute: AccountReturnsDetailsRoute,
   AccountReturnsHowItWorksRoute: AccountReturnsHowItWorksRoute,
   AccountReturnsPolicyRoute: AccountReturnsPolicyRoute,
@@ -1978,12 +2019,14 @@ const AccountRewardsRouteWithChildren = AccountRewardsRoute._addFileChildren(
 )
 
 interface AccountWalletRouteChildren {
+  AccountWalletBankAccountsRoute: typeof AccountWalletBankAccountsRoute
   AccountWalletTopupRoute: typeof AccountWalletTopupRoute
   AccountWalletWithdrawRoute: typeof AccountWalletWithdrawRoute
   AccountWalletIndexRoute: typeof AccountWalletIndexRoute
 }
 
 const AccountWalletRouteChildren: AccountWalletRouteChildren = {
+  AccountWalletBankAccountsRoute: AccountWalletBankAccountsRoute,
   AccountWalletTopupRoute: AccountWalletTopupRoute,
   AccountWalletWithdrawRoute: AccountWalletWithdrawRoute,
   AccountWalletIndexRoute: AccountWalletIndexRoute,

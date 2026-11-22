@@ -62,6 +62,7 @@ export type ApiOrderTracking = {
     carrier?: string;
     carrierLabel?: string;
     trackingNumber?: string | null;
+    trackingUrl?: string | null;
     status?: string;
     statusLabel?: string;
     etaAt?: string | null;
@@ -140,6 +141,24 @@ export type ApiReturnCard = {
   createdAt?: string;
   requestedOn?: string;
   reason?: string;
+};
+
+export type ApiReturnDetail = ApiReturnCard & {
+  details?: string | null;
+  photos?: string[];
+  items?: Array<{
+    orderItemId: string;
+    qty: number;
+    name: string;
+    brand?: string | null;
+    variant?: string;
+    image?: string | null;
+    lineTotal: number;
+  }>;
+  canCancel?: boolean;
+  cancelled?: boolean;
+  refund?: { to: string; toLabel: string; amount: number; refundedAt?: string | null; processing: string };
+  timeline?: Array<{ status: string; statusKey: string; note?: string | null; at: string }>;
 };
 
 export type ApiReturnable = {
@@ -269,7 +288,10 @@ export const accountApi = {
     apiRequest<ApiReturnCard[]>(`/store/me/returns${qs({ pageSize: 50, ...query })}`),
 
   myReturn: (id: string) =>
-    apiRequest(`/store/me/returns/${encodeURIComponent(id)}`),
+    apiRequest<ApiReturnDetail>(`/store/me/returns/${encodeURIComponent(id)}`),
+
+  cancelReturn: (id: string) =>
+    apiRequest(`/store/me/returns/${encodeURIComponent(id)}/cancel`, { method: "POST" }),
 
   returnable: (orderId: string) =>
     apiRequest<ApiReturnable>(`/store/me/orders/${encodeURIComponent(orderId)}/returnable`),
