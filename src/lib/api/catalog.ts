@@ -34,6 +34,26 @@ export type ApiProductDetail = ApiProductCard & {
   modelFit?: string | null;
 };
 
+export type HomeSlot = {
+  id: string;
+  page?: string;
+  position?: number;
+  type: string;
+  device?: string;
+  audience?: string;
+  pinned?: boolean;
+  eyebrow?: string | null;
+  headline?: string | null;
+  subhead?: string | null;
+  cta?: string | null;
+  linkTo?: string | null;
+  secondaryCta?: string | null;
+  secondaryLinkTo?: string | null;
+  imageUrl?: string | null;
+  imageColor?: string | null;
+  accent?: string | null;
+};
+
 export type HomePayload = {
   hero?: Array<{
     id: string;
@@ -42,13 +62,22 @@ export type HomePayload = {
     subhead?: string;
     cta?: string;
     linkTo?: string;
+    secondaryCta?: string;
+    secondaryLinkTo?: string;
     imageUrl?: string;
     imageColor?: string;
   }>;
+  /** Non-hero home slots (banners / editorials) in display order. */
+  slots?: HomeSlot[];
   categories?: Array<{ id?: string; handle?: string; name: string; image?: string | null }>;
   bestSellers?: ApiProductCard[];
   trending?: ApiProductCard[];
   newArrivals?: ApiProductCard[];
+  collections?: {
+    hero?: ApiCollection[];
+    row1?: ApiCollection[];
+    row2?: ApiCollection[];
+  };
 };
 
 export type ProductListQuery = {

@@ -2,7 +2,35 @@ import { catalogApi } from "@/lib/api/catalog";
 import { mapApiProduct, rememberApiMeta } from "@/lib/api/product-mapper";
 import { shopProducts, bestSellerProducts, trendingProducts } from "@/lib/shop-data";
 import { bestSellers, newArrivals, heroSlides, categories as homeCategories } from "@/lib/mock-data";
+import { homeCollections, homeSlots } from "@/lib/home-merch";
 import { useCatalogVersion } from "@/lib/catalog-version";
+import heroSneakers from "@/assets/hero-sneakers.jpg";
+import heroBag from "@/assets/hero-bag.jpg";
+import heroWatch from "@/assets/hero-watch.jpg";
+
+const FALLBACK_HERO = [
+  {
+    id: 1,
+    tag: "NEW SEASON",
+    title: "PREMIUM STYLE.\nORIGINAL ALWAYS.",
+    copy: "Curated luxury streetwear & lifestyle pieces.",
+    image: heroSneakers,
+  },
+  {
+    id: 2,
+    tag: "ARRIVING NOW",
+    title: "CARRIED BY\nTHE CULTURE.",
+    copy: "Handpicked leather goods, sourced globally.",
+    image: heroBag,
+  },
+  {
+    id: 3,
+    tag: "TIMELESS",
+    title: "EVERY SECOND\nCOUNTS.",
+    copy: "Signature timepieces ready to ship.",
+    image: heroWatch,
+  },
+];
 
 let hydrated = false;
 let inflight: Promise<void> | null = null;
@@ -72,10 +100,17 @@ export async function hydrateShopCatalogFromApi() {
             tag: h.eyebrow ?? "NEW",
             title: h.headline ?? "",
             copy: h.subhead ?? "",
-            image: h.imageUrl ?? "",
+            image: h.imageUrl || FALLBACK_HERO[i % FALLBACK_HERO.length]!.image,
           }))
         );
+      } else if (heroSlides.length === 0) {
+        replaceArray(heroSlides, FALLBACK_HERO);
       }
+
+      replaceArray(homeSlots, home.slots ?? []);
+      homeCollections.hero = home.collections?.hero ?? [];
+      homeCollections.row1 = home.collections?.row1 ?? [];
+      homeCollections.row2 = home.collections?.row2 ?? [];
 
       if (home.categories?.length) {
         replaceArray(

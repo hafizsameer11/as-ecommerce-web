@@ -7,14 +7,36 @@ import catAccessories from "@/assets/cat-accessories.jpg";
 import catFragrances from "@/assets/cat-fragrances.jpg";
 import concierge from "@/assets/concierge.jpg";
 
-/** Filled from GET /store/home via catalog-hydrate. */
+/** Seeded with local fallbacks; replaced from GET /store/home via catalog-hydrate. */
 export const heroSlides: {
   id: number;
   tag: string;
   title: string;
   copy: string;
   image: string;
-}[] = [];
+}[] = [
+  {
+    id: 1,
+    tag: "NEW SEASON",
+    title: "PREMIUM STYLE.\nORIGINAL ALWAYS.",
+    copy: "Curated luxury streetwear & lifestyle pieces.",
+    image: heroSneakers,
+  },
+  {
+    id: 2,
+    tag: "ARRIVING NOW",
+    title: "CARRIED BY\nTHE CULTURE.",
+    copy: "Handpicked leather goods, sourced globally.",
+    image: heroBag,
+  },
+  {
+    id: 3,
+    tag: "TIMELESS",
+    title: "EVERY SECOND\nCOUNTS.",
+    copy: "Signature timepieces ready to ship.",
+    image: heroWatch,
+  },
+];
 
 /** Filled from GET /store/home via catalog-hydrate. */
 export const categories: { id: string; name: string; image: string }[] = [

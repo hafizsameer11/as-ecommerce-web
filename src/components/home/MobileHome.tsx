@@ -5,9 +5,13 @@ import { HeroCarousel } from "./HeroCarousel";
 import { TrustBadges } from "./TrustBadges";
 import { CategoryGrid } from "./CategoryGrid";
 import { ProductGrid } from "./ProductGrid";
-import { ConciergeBanner } from "./ConciergeBanner";
 import { TrendingCarousel } from "./TrendingCarousel";
-import { HomeEditSections } from "./HomeEditSections";
+import {
+  ComingSoonSlotBanner,
+  ConciergeSlotBanner,
+  HomeEditSections,
+} from "./HomeEditSections";
+import { CollectionRail } from "./CollectionRail";
 import { PromoBanner } from "./PromoBanner";
 import promoImage from "@/assets/hero-sneakers.jpg";
 import { bestSellers, newArrivals } from "@/lib/mock-data";
@@ -15,6 +19,7 @@ import { getDrops, formatDropDate, hydrateDrops, subscribeDrops } from "@/lib/co
 import { useCatalogVersion } from "@/lib/catalog-version";
 import { usePublicSettings } from "@/lib/api/settings";
 import { defaultDepositPct } from "@/lib/public-settings-format";
+import { homeCollections, homeSlots, isComingSoonSlot } from "@/lib/home-merch";
 
 export function MobileHome() {
   useCatalogVersion((s) => s.v);
@@ -26,7 +31,14 @@ export function MobileHome() {
   const nextDrop = getDrops()[0];
   const { data: publicSettings } = usePublicSettings();
   const depositPct = nextDrop?.depositPct ?? defaultDepositPct(publicSettings);
+  const depositFallback = nextDrop
+    ? `${nextDrop.product.brand} ${nextDrop.product.name} lands ${formatDropDate(nextDrop.releaseAt)}. ${depositPct}% deposit secures your size.`
+    : `Secure upcoming drops with a ${depositPct}% deposit.`;
+  const hasComingSoonSlot = homeSlots.some(isComingSoonSlot);
+  const heroCollection = homeCollections.hero[0];
+  const row1 = homeCollections.row1[0];
   void tick;
+
   return (
     <MobileShell activeTop="home" activeBottom="home">
       <motion.div
@@ -37,25 +49,26 @@ export function MobileHome() {
         <HeroCarousel fullScreen />
         <TrustBadges />
         <CategoryGrid />
+        {heroCollection ? <CollectionRail collection={heroCollection} /> : null}
         <ProductGrid title="Best Sellers" products={bestSellers.slice(0, 4)} />
-        <PromoBanner
-          tag="Coming Soon"
-          title={"RESERVE\nBEFORE IT DROPS."}
-          subtitle={
-            nextDrop
-              ? `${nextDrop.product.brand} ${nextDrop.product.name} lands ${formatDropDate(nextDrop.releaseAt)}. ${depositPct}% deposit secures your size.`
-              : `Secure upcoming drops with a ${depositPct}% deposit.`
-          }
-          ctaLabel="View Drops"
-          ctaTo="/coming-soon"
-          secondaryCtaLabel={nextDrop ? "Reserve" : undefined}
-          secondaryCtaTo={nextDrop ? `/drop/${nextDrop.id}` : undefined}
-          image={nextDrop?.product.image ?? promoImage}
-        />
+        {hasComingSoonSlot ? (
+          <ComingSoonSlotBanner depositFallback={depositFallback} />
+        ) : (
+          <PromoBanner
+            tag="Coming Soon"
+            title={"RESERVE\nBEFORE IT DROPS."}
+            subtitle={depositFallback}
+            ctaLabel="View Drops"
+            ctaTo="/coming-soon"
+            secondaryCtaLabel={nextDrop ? "Reserve" : undefined}
+            secondaryCtaTo={nextDrop ? `/drop/${nextDrop.id}` : undefined}
+            image={nextDrop?.product.image ?? promoImage}
+          />
+        )}
         <ProductGrid title="New Arrivals" products={newArrivals.slice(0, 6)} />
-
-        <ConciergeBanner />
+        <ConciergeSlotBanner />
         <TrendingCarousel limit={10} />
+        {row1 ? <CollectionRail collection={row1} /> : null}
         <HomeEditSections />
       </motion.div>
     </MobileShell>

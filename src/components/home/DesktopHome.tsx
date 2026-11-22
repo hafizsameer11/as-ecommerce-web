@@ -5,9 +5,13 @@ import { HeroCarousel } from "./HeroCarousel";
 import { TrustBadges } from "./TrustBadges";
 import { CategoryGrid } from "./CategoryGrid";
 import { ProductGrid } from "./ProductGrid";
-import { ConciergeBanner } from "./ConciergeBanner";
 import { TrendingCarousel } from "./TrendingCarousel";
-import { HomeEditSections } from "./HomeEditSections";
+import {
+  ComingSoonSlotBanner,
+  ConciergeSlotBanner,
+  HomeEditSections,
+} from "./HomeEditSections";
+import { CollectionRail } from "./CollectionRail";
 import { PromoBanner } from "./PromoBanner";
 import promoImage from "@/assets/hero-sneakers.jpg";
 import { bestSellers, newArrivals } from "@/lib/mock-data";
@@ -15,6 +19,7 @@ import { getDrops, formatDropDate, hydrateDrops, subscribeDrops } from "@/lib/co
 import { useCatalogVersion } from "@/lib/catalog-version";
 import { usePublicSettings } from "@/lib/api/settings";
 import { defaultDepositPct } from "@/lib/public-settings-format";
+import { homeCollections, homeSlots, isComingSoonSlot } from "@/lib/home-merch";
 
 export function DesktopHome() {
   useCatalogVersion((s) => s.v);
@@ -26,7 +31,14 @@ export function DesktopHome() {
   const nextDrop = getDrops()[0];
   const { data: publicSettings } = usePublicSettings();
   const depositPct = nextDrop?.depositPct ?? defaultDepositPct(publicSettings);
+  const depositFallback = nextDrop
+    ? `${nextDrop.product.brand} ${nextDrop.product.name} lands ${formatDropDate(nextDrop.releaseAt)}. Secure your size with a ${depositPct}% deposit.`
+    : `Secure upcoming drops with a ${depositPct}% deposit. Balance payable on release day.`;
+  const hasComingSoonSlot = homeSlots.some(isComingSoonSlot);
+  const heroCollection = homeCollections.hero[0];
+  const row1 = homeCollections.row1[0];
   void tick;
+
   return (
     <DesktopShell active="Home">
       <motion.div
@@ -38,24 +50,26 @@ export function DesktopHome() {
         <TrustBadges />
         <div className="mx-auto max-w-[1600px]">
           <CategoryGrid />
+          {heroCollection ? <CollectionRail collection={heroCollection} /> : null}
           <ProductGrid title="Best Sellers" products={bestSellers.slice(0, 5)} />
-          <PromoBanner
-            tag="Coming Soon"
-            title={"RESERVE\nBEFORE IT DROPS."}
-            subtitle={
-              nextDrop
-                ? `${nextDrop.product.brand} ${nextDrop.product.name} lands ${formatDropDate(nextDrop.releaseAt)}. Secure your size with a ${depositPct}% deposit.`
-                : `Secure upcoming drops with a ${depositPct}% deposit. Balance payable on release day.`
-            }
-            ctaLabel="View Drops"
-            ctaTo="/coming-soon"
-            secondaryCtaLabel={nextDrop ? "Reserve Now" : undefined}
-            secondaryCtaTo={nextDrop ? `/drop/${nextDrop.id}` : undefined}
-            image={nextDrop?.product.image ?? promoImage}
-          />
+          {hasComingSoonSlot ? (
+            <ComingSoonSlotBanner depositFallback={depositFallback} />
+          ) : (
+            <PromoBanner
+              tag="Coming Soon"
+              title={"RESERVE\nBEFORE IT DROPS."}
+              subtitle={depositFallback}
+              ctaLabel="View Drops"
+              ctaTo="/coming-soon"
+              secondaryCtaLabel={nextDrop ? "Reserve Now" : undefined}
+              secondaryCtaTo={nextDrop ? `/drop/${nextDrop.id}` : undefined}
+              image={nextDrop?.product.image ?? promoImage}
+            />
+          )}
           <ProductGrid title="New Arrivals" products={newArrivals.slice(0, 5)} />
-          <ConciergeBanner />
+          <ConciergeSlotBanner />
           <TrendingCarousel limit={12} />
+          {row1 ? <CollectionRail collection={row1} /> : null}
           <HomeEditSections />
         </div>
       </motion.div>
